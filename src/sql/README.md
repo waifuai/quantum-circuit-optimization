@@ -1,6 +1,6 @@
 # SQL
 
-This directory contains historical SQL queries that were used during the cloud-based phase of the project. Since refactoring to a local, Cirq-based implementation, these queries have been superseded but are maintained here for reference.
+This directory contains SQL queries.
 
 ## Files
 
