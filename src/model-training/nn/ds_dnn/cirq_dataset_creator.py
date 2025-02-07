@@ -1,4 +1,3 @@
-# ds_dnn/cirq_dataset_creator.py
 import glob
 import os
 import re
@@ -6,10 +5,13 @@ import re
 import cirq
 import tensorflow as tf
 
+from qc.circuit_generation import GateOperationData
+
 # Configuration parameters
 BUFFER_SIZE = int(5e4)
 BATCH_SIZE = 2**15  # ~32k examples per batch
 VALIDATION_SPLIT = 0.1
+DATA_AUGMENTATION = True # Enable/Disable data augmentation
 
 # Data directory and file paths
 DIR_PATH = "shards/"  # Update this with your local directory
@@ -22,42 +24,65 @@ val_file_paths = file_paths[n_train_files:]
 print(f"Training files ({n_train_files}): {train_file_paths[0]} -> {train_file_paths[-1]}")
 print(f"Validation files ({len(val_file_paths)}): {val_file_paths[0]} -> {val_file_paths[-1]}")
 
-def preprocess_data(example):
-    """Preprocess a single CSV line example."""
-    adder = [0.0] * 32 + [1.0, 0.0] * 41 + [1.0] * (41 * 5)
-    divisor = [1024.0] * 32 + [float(i + 1), 1.0] * 41 + [5.0] * (41 * 2) + [3.0] * (41 * 3)
-    adder_tensor = tf.constant(adder, dtype=tf.float32)
-    divisor_tensor = tf.constant(divisor, dtype=tf.float32)
+def decode_csv(example):
+    """Decodes a CSV line into features and labels."""
+    # Define the structure of the CSV record
+    record_defaults = [tf.float32] * 32 + [tf.string] * 41  # 32 labels + 41 gate operation strings
+    
+    # Decode the CSV record
+    decoded_record = tf.io.decode_csv(example, record_defaults=record_defaults)
+    
+    # Separate features and labels
+    labels = tf.stack(decoded_record[:32])
+    gate_operations = decoded_record[32:]
+    return gate_operations, labels
 
-    # Replace string tokens sequentially
-    replace_dict = {
-        "U3Gate": "0",
-        "CnotGate": "0.333",
-        "Measure": "0.667",
-        "BLANK": "1",
-    }
-    for key, val in replace_dict.items():
-        example = tf.strings.regex_replace(example, key, val)
+def parse_gate_operation(gate_string):
+    """Parses a gate operation string into a GateOperationData object."""
+    parts = tf.strings.split(gate_string, sep='|')
+    gate_type = parts[0]
+    control = tf.strings.to_number(parts[1], out_type=tf.float32)
+    target = tf.strings.to_number(parts[2], out_type=tf.float32)
+    angle1 = tf.strings.to_number(parts[3], out_type=tf.float32)
+    angle2 = tf.strings.to_number(parts[4], out_type=tf.float32)
+    angle3 = tf.strings.to_number(parts[5], out_type=tf.float32)
+    
+    return gate_type, control, target, angle1, angle2, angle3
 
-    numeric_data = tf.strings.to_number(tf.strings.split(example, ","), out_type=tf.float32)
-    processed_data = (numeric_data + adder_tensor) / divisor_tensor
-    features = processed_data[32:]
-    labels = processed_data[:32]
-    return features, labels
+def preprocess_data(gate_operations, labels):
+    """Preprocess gate operations and labels with optional data augmentation."""
+    
+    def augment_gate(gate_type, control, target, angle1, angle2, angle3):
+        """Applies data augmentation to a single gate operation."""
+        if DATA_AUGMENTATION:
+            # Add small random rotations to gate angles
+            angle1 += tf.random.uniform(shape=[], minval=-0.1, maxval=0.1, dtype=tf.float32)
+            angle2 += tf.random.uniform(shape=[], minval=-0.1, maxval=0.1, dtype=tf.float32)
+            angle3 += tf.random.uniform(shape=[], minval=-0.1, maxval=0.1, dtype=tf.float32)
 
-def features_to_circuit(features, qubits):
-    """Converts features to a parameterized quantum circuit."""
+            # Swap control and target qubits in CNOT gates
+            swap_prob = 0.1  # Probability of swapping control and target
+            if tf.random.uniform(shape=[], minval=0, maxval=1, dtype=tf.float32) < swap_prob:
+                control, target = target, control
+        return gate_type, control, target, angle1, angle2, angle3
+
+    processed_gates = []
+    for gate_string in gate_operations:
+        gate_type, control, target, angle1, angle2, angle3 = parse_gate_operation(gate_string)
+        gate_type, control, target, angle1, angle2, angle3 = augment_gate(gate_type, control, target, angle1, angle2, angle3)
+        processed_gates.append((gate_type, control, target, angle1, angle2, angle3))
+
+    return processed_gates, labels
+
+def features_to_circuit(processed_gates, qubits):
+    """Converts processed gate operations to a parameterized quantum circuit."""
     circuit = cirq.Circuit()
-    # Assume features encode 41 pairs (gate_type, angle)
-    for i in range(41):
-        gate_type = features[2 * i]
-        angle = features[2 * i + 1]
-        if 0 <= gate_type < 0.333:  # U3 analog
-            circuit.append(cirq.rz(angle)(qubits[i % len(qubits)]))
-        elif 0.333 <= gate_type < 0.667:  # CNOT analog
-            control = i % len(qubits)
-            target = (i + 1) % len(qubits)
-            circuit.append(cirq.CNOT(qubits[control], qubits[target]))
+    # Assume features encode 41 gates
+    for i, (gate_type, control, target, angle1, angle2, angle3) in enumerate(processed_gates):
+        if gate_type == "U3Gate":  # U3 analog
+            circuit.append(cirq.rz(angle1)(qubits[i % len(qubits)]))
+        elif gate_type == "CnotGate":  # CNOT analog
+            circuit.append(cirq.CNOT(qubits[int(control) % len(qubits)], qubits[int(target) % len(qubits)]))
         # Add further gate mappings as needed
     return circuit
 
@@ -69,20 +94,24 @@ def create_circuit_dataset(file_paths):
         cycle_length=tf.data.AUTOTUNE,
         num_parallel_calls=tf.data.AUTOTUNE,
     )
-    # Skip header and preprocess lines
-    dataset = dataset.skip(1).map(preprocess_data, num_parallel_calls=tf.data.AUTOTUNE)
+    # Skip header
+    dataset = dataset.skip(1)
+    # Decode CSV lines
+    dataset = dataset.map(decode_csv, num_parallel_calls=tf.data.AUTOTUNE)
+    # Preprocess features and labels
+    dataset = dataset.map(preprocess_data, num_parallel_calls=tf.data.AUTOTUNE)
 
     qubits = cirq.LineQubit.range(5)
-    def map_to_circuits(features, labels):
+    def map_to_circuits(processed_gates, labels):
         circuit = tf.py_function(
-            lambda f: features_to_circuit(f.numpy(), qubits),
-            inp=[features],
-            Tout=object  # The circuit object
+            lambda g: features_to_circuit(g.numpy(), qubits),
+            inp=[processed_gates],
+            Tout=tf.string  # The circuit object
         )
         return circuit, labels
 
     dataset = dataset.map(map_to_circuits, num_parallel_calls=tf.data.AUTOTUNE)
-    dataset = dataset.shuffle(BUFFER_SIZE, reshuffle_each_iteration=False).batch(BATCH_SIZE)
+    dataset = dataset.shuffle(BUFFER_SIZE, reshuffle_each_iteration=False).batch(BATCH_SIZE).prefetch(tf.data.AUTOTUNE)
     return dataset
 
 train_circuit_dataset = create_circuit_dataset(train_file_paths)
@@ -90,4 +119,4 @@ val_circuit_dataset = create_circuit_dataset(val_file_paths)
 
 print("Example circuit from dataset:")
 for circuits, labels in train_circuit_dataset.take(1):
-    print(circuits[0])
+    print(circuits[0].numpy().decode('utf-8'))

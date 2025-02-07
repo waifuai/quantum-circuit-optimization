@@ -1,9 +1,10 @@
 # dcn/cirq_circuit_optimizer.py
 import cirq
-import numpy as np
+import numpy asnp
 import pandas as pd
 from sklearn.model_selection import train_test_split
-from utils.circuit_utils import create_circuit, calculate_loss
+from scipy.optimize import minimize
+from utils.circuit_utils import create_circuit
 
 # Configuration parameters
 BATCH_SIZE = 128
@@ -32,34 +33,43 @@ test_features = {name: test[name].values.astype('float32') for name in dense_fea
 train_target = train[target].values
 test_target = test[target].values
 
-def optimize_circuit(train_features, train_target):
-    """Optimizes circuit parameters using a simple gradient descent."""
-    params = np.random.rand(25)  # 5 layers * 5 qubits
-    for epoch in range(EPOCHS):
+def calculate_fidelity(circuit: cirq.Circuit, target_state: np.ndarray) -> float:
+    """Calculates the fidelity between the circuit's output statevector and the target state."""
+    simulator = cirq.Simulator()
+    result = simulator.simulate(circuit)
+    state_vector = result.final_state_vector
+    
+    # Ensure both vectors are normalized
+    state_vector = state_vector / np.linalg.norm(state_vector)
+    target_state = target_state / np.linalg.norm(target_state)
+
+    # Compute fidelity
+    fidelity = np.abs(np.dot(np.conjugate(target_state), state_vector))**2
+    return fidelity
+
+def optimize_circuit(train_features, train_target, initial_params=None):
+    """Optimizes circuit parameters using the BFGS algorithm."""
+
+    def loss_function(params):
+        """Calculates the average loss (1-fidelity) over the training set for given circuit parameters."""
         total_loss = 0
         for features, target_state in zip(train_features.values(), train_target):
             circuit = create_circuit(params, num_qubits=5)
-            loss = calculate_loss(circuit, target_state)
+            fidelity = calculate_fidelity(circuit, target_state)
+            loss = 1 - fidelity
             total_loss += loss
+        return total_loss / len(train_features)
 
-            # Compute numerical gradients
-            gradients = np.zeros_like(params)
-            for i in range(len(params)):
-                params_plus = params.copy()
-                params_plus[i] += 0.01
-                loss_plus = calculate_loss(create_circuit(params_plus, num_qubits=5), target_state)
+    if initial_params is None:
+        initial_params = np.random.rand(25)  # 5 layers * 5 qubits
+    result = minimize(loss_function, initial_params, method='BFGS')
 
-                params_minus = params.copy()
-                params_minus[i] -= 0.01
-                loss_minus = calculate_loss(create_circuit(params_minus, num_qubits=5), target_state)
-
-                gradients[i] = (loss_plus - loss_minus) / 0.02
-
-            params -= 0.1 * gradients  # Update parameters
-
-        avg_loss = total_loss / len(train_features)
-        print(f"Epoch {epoch+1}, Average Loss: {avg_loss}")
-    return params
+    if result.success:
+        print("Optimization successful!")
+        return result.x
+    else:
+        print("Optimization failed:", result.message)
+        return initial_params  # Return initial parameters if optimization fails
 
 if __name__ == '__main__':
     optimized_params = optimize_circuit(train_features, train_target)

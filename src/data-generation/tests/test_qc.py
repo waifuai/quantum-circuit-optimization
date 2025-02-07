@@ -2,34 +2,39 @@
 
 import random
 import os
-import pickle
 import cirq
 import pytest
+import tensorflow as tf
+import subprocess  # Import subprocess
+import hypothesis
+from hypothesis import given
+from hypothesis import strategies as st
 
 from qc.circuit_generation import (
     generate_random_circuit,
     gate_operation_to_dict,
     circuit_to_dict,
     QuantumConfig,
+    GateOperationData,
 )
 from qc.optimization import optimize_circuit
 from qc.simulation import simulate_with_noise, simulate_statevector
+from scripts.generate_dataset import generate_dataset, circuit_dict_to_tfrecord  # Import necessary functions
 
 # --- Tests for qc/circuit_generation.py ---
 
-def test_generate_random_circuit():
+@given(n_gates=st.integers(min_value=1, max_value=10))
+def test_generate_random_circuit_hypothesis(n_gates):
     # Use a fixed seed for reproducibility.
     random.seed(42)
     qubits = [cirq.GridQubit(0, i) for i in range(QuantumConfig.N_QUBITS)]
-    n_gates = 3
+    # Test with default gate set
     circuit = generate_random_circuit(qubits, n_gates)
-    # Check that the circuit contains at least one measurement operation.
     measurement_ops = [
         op for op in circuit.all_operations()
         if isinstance(op.gate, cirq.MeasurementGate)
     ]
     assert len(measurement_ops) > 0, "Circuit must have a measurement operation."
-    # Check that there are at least n_gates non-measurement operations.
     non_measurement_ops = [
         op for op in circuit.all_operations()
         if not isinstance(op.gate, cirq.MeasurementGate)
@@ -39,15 +44,14 @@ def test_generate_random_circuit():
 def test_gate_operation_to_dict():
     qubit = cirq.GridQubit(0, 0)
     op = cirq.X(qubit)
-    op_dict = gate_operation_to_dict(op)
+    op_data = gate_operation_to_dict(op)
     # Verify that the dictionary contains the gate type and qubit info.
-    assert "gate_type" in op_dict and isinstance(op_dict["gate_type"], str)
-    assert "qubits" in op_dict and isinstance(op_dict["qubits"], list)
-    assert str(qubit) in op_dict["qubits"]
+    assert isinstance(op_data, GateOperationData)
+    assert op_data.gate_type == "X"
+    assert op_data.qubits == (qubit,)
     # If the gate has an exponent attribute, verify that it is captured.
     if hasattr(op.gate, 'exponent'):
-        assert "exponent" in op_dict
-        assert op_dict["exponent"] == op.gate.exponent
+        assert op_data.exponent == op.gate.exponent
 
 def test_circuit_to_dict():
     qubits = [cirq.GridQubit(0, i) for i in range(QuantumConfig.N_QUBITS)]
@@ -58,9 +62,10 @@ def test_circuit_to_dict():
     # The total number of gate operations should equal the number in the circuit.
     assert num_gates == len(list(circuit.all_operations()))
     # Each gate should have a key of the form "gate_XX".
-    for i in range(num_gates):
-        key = f"gate_{i:02}"
-        assert key in gates_dict
+    i = 0
+    for key, gate_data in gates_dict.items():
+        assert key == f"gate_{i:02}"
+        i += 1
 
 # --- Tests for qc/optimization.py ---
 
@@ -78,6 +83,11 @@ def test_optimize_circuit():
     ]
     assert len(measurement_ops) > 0
 
+    # Test with a custom gateset
+    custom_gateset = cirq.SqrtIswapTargetGateset()
+    optimized_custom = optimize_circuit(circuit, qubits, gateset=custom_gateset)
+    assert isinstance(optimized_custom, cirq.Circuit)
+
 # --- Tests for qc/simulation.py ---
 
 def test_simulate_with_noise():
@@ -89,6 +99,12 @@ def test_simulate_with_noise():
     for key, count in counts.items():
         assert isinstance(key, int)
         assert isinstance(count, int)
+
+    # Test with different noise models
+    counts_bit_flip = simulate_with_noise(circuit, noise_model="bit_flip")
+    assert isinstance(counts_bit_flip, dict)
+    counts_phase_flip = simulate_with_noise(circuit, noise_model="phase_flip")
+    assert isinstance(counts_phase_flip, dict)
 
 def test_simulate_statevector():
     qubits = [cirq.GridQubit(0, i) for i in range(QuantumConfig.N_QUBITS)]
@@ -102,10 +118,8 @@ def test_simulate_statevector():
 # --- Tests for scripts/generate_dataset.py ---
 
 def test_generate_dataset(tmp_path):
-    # Import the generate_dataset function from the scripts module.
-    from scripts.generate_dataset import generate_dataset
-    qubits = [cirq.GridQubit(0, i) for i in range(QuantumConfig.N_QUBITS)]
     # Generate a small dataset (e.g. 3 circuits).
+    qubits = [cirq.GridQubit(0, i) for i in range(QuantumConfig.N_QUBITS)]
     dataset = generate_dataset(3, qubits)
     assert isinstance(dataset, list)
     assert len(dataset) == 3
@@ -118,11 +132,78 @@ def test_generate_dataset(tmp_path):
         "optimized_circuit",
     }
     for qc_dict in dataset:
-        assert expected_keys.issubset(qc_dict.keys())
-    # Test saving and loading the dataset using pickle.
-    dataset_path = tmp_path / "test_dataset.pkl"
-    with open(dataset_path, "wb") as f:
-        pickle.dump(dataset, f)
-    with open(dataset_path, "rb") as f:
-        loaded_dataset = pickle.load(f)
-    assert loaded_dataset == dataset
+        assert set(qc_dict.keys()) == expected_keys
+
+def test_circuit_dict_to_tfrecord():
+    # Create a sample circuit dictionary
+    qubits = [cirq.GridQubit(0, i) for i in range(QuantumConfig.N_QUBITS)]
+    circuit = generate_random_circuit(qubits, 3)
+    gates_dict, num_gates = circuit_to_dict(circuit)
+    simulation_counts = simulate_with_noise(circuit)
+    optimized = optimize_circuit(circuit, qubits)
+
+    qc_dict = {
+        "raw_circuit": str(circuit),
+        "gates": [gate.__dict__ for gate in gates_dict.values()],  # Convert dataclasses to dicts
+        "num_gates": num_gates,
+        "simulation_counts": str(simulation_counts), # Serialize the dict to string
+        "optimized_circuit": str(optimized)
+    }
+    # Convert the circuit dictionary to a TFRecord
+    example = circuit_dict_to_tfrecord(qc_dict)
+    assert isinstance(example, tf.train.Example)
+
+def test_generate_dataset_tfrecord(tmp_path):
+    # Test the generate_dataset function and saving to TFRecord format
+    qubits = [cirq.GridQubit(0, i) for i in range(QuantumConfig.N_QUBITS)]
+    num_circuits = 2
+    dataset = generate_dataset(num_circuits, qubits)
+    output_file = str(tmp_path / "test_dataset.tfrecord")
+
+    with tf.io.TFRecordWriter(output_file) as writer:
+        for qc_dict in dataset:
+            example = circuit_dict_to_tfrecord(qc_dict)
+            writer.write(example.SerializeToString())
+
+    # Verify that the TFRecord file was created
+    assert os.path.exists(output_file)
+
+    # Read the TFRecord file and verify its contents
+    record_iterator = tf.data.TFRecordDataset(output_file).as_numpy_iterator()
+    count = 0
+    for record in record_iterator:
+        count += 1
+        example = tf.train.Example()
+        example.ParseFromString(record)
+        assert 'raw_circuit' in example.features.feature
+    assert count == num_circuits
+
+def test_generate_dataset_command_line(tmp_path):
+    # Test the command-line interface of generate_dataset.py
+    output_file = str(tmp_path / "test_dataset_cli.tfrecord")
+    # Run the script with command-line arguments
+    result = subprocess.run([
+        "python", "src/data-generation/scripts/generate_dataset.py",
+        "--n_circuits", "5",
+        "--min_gates", "1",
+        "--max_gates", "3",
+        "--n_qubits", "4",
+        "--noise_level", "0.02",
+        "--output_file", output_file
+    ], capture_output=True, text=True)
+
+    # Check that the script ran successfully
+    assert result.returncode == 0, f"Script failed with error: {result.stderr}"
+
+    # Verify that the TFRecord file was created
+    assert os.path.exists(output_file)
+
+    # Read the TFRecord file and verify its contents
+    record_iterator = tf.data.TFRecordDataset(output_file).as_numpy_iterator()
+    count = 0
+    for record in record_iterator:
+        count += 1
+        example = tf.train.Example()
+        example.ParseFromString(record)
+        assert 'raw_circuit' in example.features.feature
+    assert count == 5
