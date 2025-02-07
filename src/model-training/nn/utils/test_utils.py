@@ -10,7 +10,7 @@ class TestCircuitUtils(unittest.TestCase):
     def test_create_circuit_default(self):
         # Use a fixed set of 25 parameters (5 layers * 5 qubits)
         params = [0.1] * 25
-        circuit = circuit_utils.create_circuit(params)
+        circuit = circuit_utils.create_circuit(params, num_qubits=5)
         
         # Verify the returned object is a cirq.Circuit instance.
         self.assertIsInstance(circuit, cirq.Circuit)

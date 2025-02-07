@@ -1,20 +1,21 @@
 # utils/circuit_utils.py
 import cirq
 
-def create_circuit(params, qubits=None):
+def create_circuit(params, num_qubits=5, qubits=None):
     """Creates a parameterized quantum circuit.
     
     If qubits is None, uses a default 5-qubit register.
     """
     if qubits is None:
+        qubits = cirq.LineQubit.range(num_qubits)
         qubits = cirq.LineQubit.range(5)
     circuit = cirq.Circuit()
     param_idx = 0
     for _ in range(5):  # 5 layers
-        for j in range(5):
+        for j in range(num_qubits):
             circuit.append(cirq.rx(params[param_idx])(qubits[j]))
             param_idx += 1
-        for j in range(4):
+        for j in range(num_qubits - 1):
             circuit.append(cirq.CNOT(qubits[j], qubits[j+1]))
     return circuit
 

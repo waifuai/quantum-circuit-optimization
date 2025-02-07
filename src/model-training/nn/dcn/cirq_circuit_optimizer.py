@@ -38,7 +38,7 @@ def optimize_circuit(train_features, train_target):
     for epoch in range(EPOCHS):
         total_loss = 0
         for features, target_state in zip(train_features.values(), train_target):
-            circuit = create_circuit(params)
+            circuit = create_circuit(params, num_qubits=5)
             loss = calculate_loss(circuit, target_state)
             total_loss += loss
 
@@ -47,11 +47,11 @@ def optimize_circuit(train_features, train_target):
             for i in range(len(params)):
                 params_plus = params.copy()
                 params_plus[i] += 0.01
-                loss_plus = calculate_loss(create_circuit(params_plus), target_state)
+                loss_plus = calculate_loss(create_circuit(params_plus, num_qubits=5), target_state)
 
                 params_minus = params.copy()
                 params_minus[i] -= 0.01
-                loss_minus = calculate_loss(create_circuit(params_minus), target_state)
+                loss_minus = calculate_loss(create_circuit(params_minus, num_qubits=5), target_state)
 
                 gradients[i] = (loss_plus - loss_minus) / 0.02
 
@@ -64,6 +64,6 @@ def optimize_circuit(train_features, train_target):
 if __name__ == '__main__':
     optimized_params = optimize_circuit(train_features, train_target)
     print("Optimized parameters:", optimized_params)
-    circuit = create_circuit(optimized_params)
+    circuit = create_circuit(optimized_params, num_qubits=5)
     print("Optimized Circuit:")
     print(circuit)

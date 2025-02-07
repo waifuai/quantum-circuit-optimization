@@ -83,19 +83,6 @@ Each module within `model-training` has its own README file with detailed instru
     python src/model-training/trax-train/src/train.py
     ```
 
-### `sql`
-
-This directory contains SQL queries.
-
-**Queries include:**
-
-*   `blank_gates.sql`: Replaces empty gate types with 'BLANK'.
-*   `combine_tables.sql`: Merges data from multiple tables.
-*   `fail_replace.sql`: Attempts to replace 'BLANK' with '1'.
-*   `flatten_1s.sql`: Flattens the dataset schema for level-1 circuits.
-*   `flatten_32s.sql`: Flattens the dataset schema for level-32 circuits.
-*   `normalize.sql`: Normalizes state vector columns.
-
 ## Getting Started with the Repository
 
 1. **Clone the repository:**

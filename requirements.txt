@@ -6,3 +6,4 @@ apache-beam
 numpy
 deepctr
 cirq
+trax
