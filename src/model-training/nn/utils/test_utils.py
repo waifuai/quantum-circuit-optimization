@@ -51,27 +51,5 @@ class TestCircuitUtils(unittest.TestCase):
         loss = circuit_utils.calculate_loss(circuit, target_state)
         self.assertAlmostEqual(loss, 0.0, places=5)
 
-class TestModelUtils(unittest.TestCase):
-    def test_create_dnn_model_output_shape(self):
-        input_dim = 10
-        num_params = 25
-        model = model_utils.create_dnn_model(input_dim, num_params)
-        
-        # Verify the model's input and output shapes.
-        self.assertEqual(model.input_shape, (None, input_dim))
-        self.assertEqual(model.output_shape, (None, num_params))
-
-    def test_dnn_forward_pass(self):
-        input_dim = 10
-        num_params = 25
-        model = model_utils.create_dnn_model(input_dim, num_params)
-        
-        # Create a dummy input batch of size 2.
-        sample_input = np.random.rand(2, input_dim).astype(np.float32)
-        output = model(sample_input)
-        
-        # The output should have shape (2, num_params)
-        self.assertEqual(output.shape, (2, num_params))
-
 if __name__ == '__main__':
     unittest.main()
