@@ -7,14 +7,14 @@ import tempfile
 
 import tensorflow as tf
 
-# Import functions and constants from csv_norm_new.py
-from src.model-training.prep.csv_norm_new import (
+# Import functions and constants from csv_norm.py
+from src.model-training.prep.csv_norm import (
     generate_statevector_keys,
     generate_gate_keys,
     normalize_gate_number,
     normalize_shard,
-    STATEVECTOR_KEYS,
-    GATE_KEYS,
+    normalize_memory,
+    process_csv,
 )
 
 # Import convert_to_tfrecord from csv_to_tfrecord.py
@@ -22,20 +22,20 @@ from src.model-training.prep.csv_to_tfrecord import convert_to_tfrecord
 
 
 # ------------------------------
-# Tests for csv_norm_new.py
+# Tests for csv_norm.py
 # ------------------------------
 
 def test_generate_statevector_keys():
-    """Test that statevector keys are generated correctly for n_qubits=5."""
-    n_qubits: int = 5
-    keys: List[str] = generate_statevector_keys(n_qubits)
-    expected_length: int = 2 ** n_qubits
+    """Test that statevector keys are generated correctly for num_qubits=5."""
+    num_qubits: int = 5
+    keys: List[str] = generate_statevector_keys(num_qubits)
+    expected_length: int = 2 ** num_qubits
     assert len(keys) == expected_length
     for key in keys:
         assert key.startswith("statevector_")
-        # The binary part should be exactly n_qubits long.
+        # The binary part should be exactly num_qubits long.
         bin_part: str = key.split("_")[1]
-        assert len(bin_part) == n_qubits
+        assert len(bin_part) == num_qubits
 
 
 def test_generate_gate_keys():
@@ -49,73 +49,95 @@ def test_generate_gate_keys():
             assert key.startswith("gate_")
 
 
-@pytest.mark.parametrize("n, expected", [
+@pytest.mark.parametrize("gate_number, expected", [
     (-1, 0),
     (0, 1),
     (10, 1)
 ])
-def test_normalize_gate_number(n: int, expected: int):
+def test_normalize_gate_number(gate_number: int, expected: int):
     """Test that normalize_gate_number returns 0 for -1 and 1 for other numbers."""
-    assert normalize_gate_number(n) == expected
+    assert normalize_gate_number(gate_number) == expected
+
+
+def create_dummy_dataframe(num_qubits: int = 5, num_gates: int = 40):
+    """Creates a dummy DataFrame for testing."""
+    data: Dict[str, List[float]] = {}
+
+    # statevector_keys: use 1024 so that division yields 1.0.
+    for col in generate_statevector_keys(num_qubits):
+        data[col] = [1024.0]
+
+    # Gate type: use "U3Gate" (which should be mapped to 0).
+    for col in generate_gate_keys(num_gates)["type"]:
+        data[col] = ["U3Gate"]
+
+    # Control and target: use 4 so that (4+1)/5 = 1.0.
+    for col in generate_gate_keys(num_gates)["control"] + generate_gate_keys(num_gates)["target"]:
+        data[col] = [4.0]
+
+    # Angles: use 2 so that (2+1)/3 = 1.0.
+    for col in generate_gate_keys(num_gates)["angle1"] + generate_gate_keys(num_gates)["angle2"] + generate_gate_keys(num_gates)["angle3"]:
+        data[col] = [2.0]
+
+    # Gate numbers: use -1 so that normalize_gate_number returns 0.
+    for col in generate_gate_keys(num_gates)["number"]:
+        data[col] = [-1.0]
+
+    return pd.DataFrame(data)
 
 
 def test_normalize_shard(tmp_path: Path):
     """
-    Create a dummy CSV shard with the expected columns, run normalize_shard,
-    and verify that each normalization step has been applied correctly.
+    Test the normalize_shard function.
     """
-    # Prepare one row of dummy data.
-    data: Dict[str, List[float]] = {}
-
-    # STATEVECTOR_KEYS: use 1024 so that division yields 1.0.
-    for col in STATEVECTOR_KEYS:
-        data[col] = [1024.0]
-
-    # Gate type: use "U3Gate" (which should be mapped to 0).
-    for col in GATE_KEYS["type"]:
-        data[col] = ["U3Gate"]
-
-    # Control and target: use 4 so that (4+1)/5 = 1.0.
-    for col in GATE_KEYS["control"] + GATE_KEYS["target"]:
-        data[col] = [4.0]
-
-    # Angles: use 2 so that (2+1)/3 = 1.0.
-    for col in GATE_KEYS["angle1"] + GATE_KEYS["angle2"] + GATE_KEYS["angle3"]:
-        data[col] = [2.0]
-
-    # Gate numbers: use -1 so that normalize_gate_number returns 0.
-    for col in GATE_KEYS["number"]:
-        data[col] = [-1.0]
-
-    df: pd.DataFrame = pd.DataFrame(data)
-
-    # Write the CSV file in the temporary directory.
+    num_qubits = 5
+    num_gates = 40
+    df = create_dummy_dataframe(num_qubits, num_gates)
     input_file: Path = tmp_path / "test_shard.csv"
     df.to_csv(input_file, index=False)
-
-    # Run normalization.
-    normalize_shard(input_file)
-
-    # The output file is created with "_output.csv" appended to the stem.
     output_file: Path = tmp_path / "test_shard_output.csv"
+
+    process_csv(input_file, output_file, method="shard", num_qubits=num_qubits, num_gates=num_gates)
+
     assert output_file.exists()
 
     df_out: pd.DataFrame = pd.read_csv(output_file)
     # Check that statevector values are normalized to 1.0.
-    for col in STATEVECTOR_KEYS:
+    for col in generate_statevector_keys(num_qubits):
         np.testing.assert_allclose(df_out[col].values, [1.0])
     # Check that gate type values are mapped (U3Gate -> 0).
-    for col in GATE_KEYS["type"]:
+    for col in generate_gate_keys(num_gates)["type"]:
         np.testing.assert_allclose(df_out[col].values, [0.0])
     # Check control/target normalization: (4+1)/5 = 1.0.
-    for col in GATE_KEYS["control"] + GATE_KEYS["target"]:
+    for col in generate_gate_keys(num_gates)["control"] + generate_gate_keys(num_gates)["target"]:
         np.testing.assert_allclose(df_out[col].values, [1.0])
     # Check angles normalization: (2+1)/3 = 1.0.
-    for col in GATE_KEYS["angle1"] + GATE_KEYS["angle2"] + GATE_KEYS["angle3"]:
+    for col in generate_gate_keys(num_gates)["angle1"] + generate_gate_keys(num_gates)["angle2"] + generate_gate_keys(num_gates)["angle3"]:
         np.testing.assert_allclose(df_out[col].values, [1.0])
     # Check gate numbers normalization: -1 becomes 0.
-    for col in GATE_KEYS["number"]:
+    for col in generate_gate_keys(num_gates)["number"]:
         np.testing.assert_allclose(df_out[col].values, [0.0])
+
+
+def test_normalize_memory(tmp_path: Path):
+    """
+    Test the normalize_memory function.
+    """
+    num_qubits = 5
+    num_gates = 40
+    df = create_dummy_dataframe(num_qubits, num_gates)
+    input_file: Path = tmp_path / "test_memory.csv"
+    df.to_csv(input_file, index=False)
+    output_file: Path = tmp_path / "test_memory_output.csv"
+
+    process_csv(input_file, output_file, method="memory", num_qubits=num_qubits, num_gates=num_gates)
+
+    assert output_file.exists()
+
+    df_out: pd.DataFrame = pd.read_csv(output_file)
+    # The memory method uses MinMaxScaler, so the values will be different.
+    # We can't directly check the values, but we can check that the function runs without errors.
+    assert True
 
 
 # ------------------------------

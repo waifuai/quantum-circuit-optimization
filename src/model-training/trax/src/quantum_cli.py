@@ -1,3 +1,7 @@
+"""
+Command-line interface for quantum circuit optimization using Trax.
+"""
+
 import os
 import sys
 import argparse
@@ -6,6 +10,9 @@ import trax
 from trax import layers as tl
 from trax.supervised import training
 from typing import Tuple, List, Dict, Any
+
+from src.model-training.trax.src import data
+from src.model-training.trax.src import model
 
 
 def preprocess_data(input_file: str, input_processed_file: str, output_processed_file: str) -> None:
@@ -31,85 +38,6 @@ def preprocess_data(input_file: str, input_processed_file: str, output_processed
         sys.exit(1)
 
 
-def create_data_pipeline(input_filepath: str, output_filepath: str, batch_size: int) -> Tuple[trax.data.Serial, int]:
-    """
-    Creates a data pipeline for training and evaluation.
-
-    Args:
-        input_filepath: Path to the processed input file.
-        output_filepath: Path to the processed output file.
-        batch_size: Batch size for training.
-
-    Returns:
-        A tuple containing the data pipeline and the vocabulary size.
-    """
-
-    def quantum_circuit_data_generator(input_file: str, output_file: str):
-        """Generates pairs of input and output quantum circuits."""
-        vocab: set = set()
-        try:
-            with open(input_file, 'r') as in_file, open(output_file, 'r') as out_file:
-                for in_line, out_line in zip(in_file, out_file):
-                    in_line = in_line.strip()
-                    out_line = out_line.strip()
-                    vocab.update(in_line.split())
-                    vocab.update(out_line.split())
-                    yield (in_line, out_line)
-        except FileNotFoundError:
-            print(f"Error: Input file '{input_file}' not found.", file=sys.stderr)
-            sys.exit(1)
-        return vocab
-
-    vocab: set = quantum_circuit_data_generator(input_filepath, output_filepath)
-    vocab_size: int = len(vocab)
-
-    def preprocess(data_pair: Tuple[str, str]) -> Dict[str, np.ndarray]:
-        """Converts input and output strings to numpy arrays."""
-        inp: str
-        outp: str
-        inp, outp = data_pair
-        return {
-            'inputs': np.array(list(map(int, inp.split()))),
-            'targets': np.array(list(map(int, outp.split())))
-        }
-
-    data_pipeline: trax.data.Serial = trax.data.Serial(
-        lambda _: quantum_circuit_data_generator(input_filepath, output_filepath),
-        preprocess,
-        trax.data.Batch(batch_size=batch_size)
-    )
-    return data_pipeline, vocab_size
-
-
-def transformer_model(vocab_size: int, d_model: int = 128, d_ff: int = 512,
-                        n_heads: int = 4, n_layers: int = 2, mode: str = 'train') -> tl.Serial:
-    """
-    Defines the Transformer model.
-
-    Args:
-        vocab_size: Vocabulary size.
-        d_model:  Depth of embedding (n_units in the attention layer).
-        d_ff:  Depth of feed-forward layer.
-        n_heads: Number of attention heads.
-        n_layers: Number of encoder layers.
-        mode: 'train' or 'eval'.
-
-    Returns:
-        A Trax Serial model.
-    """
-    return tl.Serial(
-        tl.Embedding(vocab_size, d_model),
-        [tl.EncoderBlock(d_model, d_ff, n_heads, dropout=0.1) for _ in range(n_layers)],
-        tl.Dense(vocab_size),
-        tl.LogSoftmax()
-    )
-
-
-def get_model(vocab_size: int, mode: str = 'train') -> tl.Serial:
-    """Instantiates the Transformer model."""
-    return transformer_model(vocab_size, mode=mode)
-
-
 def tokenize_input(circuit_str: str) -> np.ndarray:
     """Tokenizes the input circuit string."""
     return np.array([list(map(int, circuit_str.split()))])
@@ -132,16 +60,16 @@ def predict(model_dir: str, input_circuit: str, vocab_size: int) -> str:
     Returns:
         The optimized circuit as a space-separated string.
     """
-    model: tl.Serial = get_model(vocab_size, mode='predict')
+    model_instance: tl.Serial = model.get_model(vocab_size, mode='predict')
     model_file: str = os.path.join(model_dir, "model.pkl.gz")
     try:
-        model.init_from_file(model_file, weights_only=True)
+        model_instance.init_from_file(model_file, weights_only=True)
     except FileNotFoundError:
         print(f"Error: Model file '{model_file}' not found.", file=sys.stderr)
         sys.exit(1)
 
     tokenized_input: np.ndarray = tokenize_input(input_circuit)
-    predictions: np.ndarray = model(tokenized_input)
+    predictions: np.ndarray = model_instance(tokenized_input)
     predicted_tokens: np.ndarray = np.argmax(predictions[0], axis=-1)
     return detokenize_prediction(predicted_tokens)
 
@@ -162,9 +90,9 @@ def train_model(input_file: str, output_file: str, model_dir: str,
     os.makedirs(model_dir, exist_ok=True)
     train_pipeline: trax.data.Serial
     eval_pipeline: trax.data.Serial
-    train_pipeline, _ = create_data_pipeline(input_file, output_file, batch_size)
-    eval_pipeline, _ = create_data_pipeline(input_file, output_file, batch_size)
-    model: tl.Serial = get_model(vocab_size, mode='train')
+    train_pipeline, _ = data.create_data_pipeline(input_file, output_file, batch_size)
+    eval_pipeline, _ = data.create_data_pipeline(input_file, output_file, batch_size)
+    model_instance: tl.Serial = model.get_model(vocab_size, mode='train')
 
     train_task: training.TrainTask = training.TrainTask(
         labeled_data=train_pipeline,
@@ -174,7 +102,7 @@ def train_model(input_file: str, output_file: str, model_dir: str,
     )
 
     loop: training.Loop = training.Loop(
-        model,
+        model_instance,
         train_task,
         eval_tasks=[training.EvalTask(
             labeled_data=eval_pipeline,
@@ -183,6 +111,42 @@ def train_model(input_file: str, output_file: str, model_dir: str,
         output_dir=model_dir,
     )
     loop.run(n_steps=n_steps)
+
+
+def handle_prep_command(args: argparse.Namespace) -> None:
+    """Handles the 'prep' command."""
+    if not os.path.exists(args.input_file):
+        print(f"Error: Input file '{args.input_file}' not found.", file=sys.stderr)
+        sys.exit(1)
+    preprocess_data(args.input_file, args.input_processed_file, args.output_processed_file)
+    print("Data preprocessing complete.")
+
+
+def handle_train_command(args: argparse.Namespace) -> None:
+    """Handles the 'train' command."""
+    input_file: str = os.path.join(args.data_dir, args.input_file)
+    output_file: str = os.path.join(args.data_dir, args.output_file)
+
+    if not os.path.exists(input_file) or not os.path.exists(output_file):
+        print("Error: Input or output file not found.", file=sys.stderr)
+        sys.exit(1)
+    _, vocab_size = data.create_data_pipeline(input_file, output_file, args.batch_size)
+
+    train_model(input_file, output_file, args.model_dir, args.batch_size, args.n_steps, vocab_size)
+    print("Training complete.")
+
+
+def handle_predict_command(args: argparse.Namespace) -> None:
+    """Handles the 'predict' command."""
+    input_file: str = os.path.join(args.data_dir, "input.txt")  # dummy file needed for vocab
+    output_file: str = os.path.join(args.data_dir, "output.txt")  # dummy file needed for vocab
+    _, vocab_size = data.create_data_pipeline(input_file, output_file, batch_size=64)  # dummy batch size
+
+    if not os.path.exists(args.model_dir):
+        print("Error: Model directory not found.", file=sys.stderr)
+        sys.exit(1)
+    optimized_circuit: str = predict(args.model_dir, args.input_circuit, vocab_size)
+    print("Optimized circuit:", optimized_circuit)
 
 
 def main() -> None:
@@ -213,35 +177,11 @@ def main() -> None:
     args: argparse.Namespace = parser.parse_args()
 
     if args.command == "prep":
-        if not os.path.exists(args.input_file):
-            print(f"Error: Input file '{args.input_file}' not found.", file=sys.stderr)
-            sys.exit(1)
-        preprocess_data(args.input_file, args.input_processed_file, args.output_processed_file)
-        print("Data preprocessing complete.")
-
+        handle_prep_command(args)
     elif args.command == "train":
-        input_file: str = os.path.join(args.data_dir, args.input_file)
-        output_file: str = os.path.join(args.data_dir, args.output_file)
-
-        if not os.path.exists(input_file) or not os.path.exists(output_file):
-            print("Error: Input or output file not found.", file=sys.stderr)
-            sys.exit(1)
-        _, vocab_size = create_data_pipeline(input_file, output_file, args.batch_size)
-
-        train_model(input_file, output_file, args.model_dir, args.batch_size, args.n_steps, vocab_size)
-        print("Training complete.")
-
+        handle_train_command(args)
     elif args.command == "predict":
-        input_file: str = os.path.join(args.data_dir, "input.txt")  # dummy file needed for vocab
-        output_file: str = os.path.join(args.data_dir, "output.txt")  # dummy file needed for vocab
-        _, vocab_size = create_data_pipeline(input_file, output_file, batch_size=64)  # dummy batch size
-
-        if not os.path.exists(args.model_dir):
-            print("Error: Model directory not found.", file=sys.stderr)
-            sys.exit(1)
-        optimized_circuit: str = predict(args.model_dir, args.input_circuit, vocab_size)
-        print("Optimized circuit:", optimized_circuit)
-
+        handle_predict_command(args)
     else:
         parser.print_help()
 

@@ -1,98 +1,44 @@
-# Model Training and Prediction Pipeline
+# Testing the Quantum Circuit Optimization CLI
 
-## Overview
-
-This repository provides a simple framework for training a machine learning model, generating predictions, and handling data pipelines. The project is split into three main components:
-
-- **Prediction Module**: Loads a model and produces optimized circuit predictions.
-- **Problem Module**: Constructs data pipelines and instantiates the model.
-- **Training Module**: Executes the model training loop and saves the trained model.
-
-Unit tests have been written for each of these components using Python’s built-in `unittest` framework to ensure proper functionality.
+This directory contains unit tests for the quantum circuit optimization command-line interface (CLI) implemented using Trax. The tests ensure that the CLI functions correctly, including data preprocessing, model training, and prediction.
 
 ## Project Structure
 
+The tests are organized to mirror the structure of the `src` directory:
+
 ```
-.
-├── src
-│   ├── predict.py           # Contains the 'predict' function for circuit optimization.
-│   ├── train.py             # Contains the 'train_model' function for training the model.
-│   └── trainer
-│       └── problem.py       # Contains 'get_data_pipelines' and 'get_model' functions.
-├── test_predict.py          # Unit tests for the predict module.
-├── test_problem.py          # Unit tests for the problem module.
-└── test_train.py            # Unit tests for the training module.
+src/model-training/trax/tests/
+├── test_quantum_cli.py   # Unit tests for the quantum_cli.py module.
+└── README.md             # This file.
 ```
-
-## Setup and Installation
-
-1. **Clone the repository:**
-
-   ```bash
-   git clone <repository-url>
-   cd <repository-directory>
-   ```
-
-2. **Create a virtual environment (recommended):**
-
-   ```bash
-   python3 -m venv env
-   source env/bin/activate   # On Windows use: env\Scripts\activate
-   ```
-
-3. **Install dependencies:**
-
-   If you have a `requirements.txt` file, run:
-
-   ```bash
-   pip install -r requirements.txt
-   ```
-
-   Otherwise, ensure you have Python 3 installed along with any necessary packages (e.g. `numpy`).
 
 ## Running Tests
 
-The project uses Python’s built-in `unittest` framework. To run all tests, execute:
+The project uses Python’s built-in `unittest` framework. To run the tests, execute:
 
 ```bash
-python -m unittest discover
+python -m unittest src/model-training/trax/tests/test_quantum_cli.py
 ```
 
-Alternatively, you can run individual test files:
+## Test Files
 
-```bash
-python test_predict.py
-python test_problem.py
-python test_train.py
-```
+### `test_quantum_cli.py`
 
-## Modules Overview
+This file contains unit tests for the `quantum_cli.py` module. The tests use the `unittest.mock` module to mock external dependencies and ensure that the CLI functions are called with the correct arguments.
 
-### Predict Module (`src/predict.py`)
+The following functions are tested:
 
-This module provides the `predict` function that:
-- Loads a model from a specified directory.
-- Processes an input circuit.
-- Returns an optimized circuit prediction.
+*   `preprocess_data`: Tests that the data preprocessing function is called correctly.
+*   `train_model`: Tests that the model training function is called correctly.
+*   `predict`: Tests that the prediction function is called correctly.
+*   `create_data_pipeline`: Tests that the data pipeline creation function is called correctly.
+*   `get_model`: Tests that the model instantiation function is called correctly.
+*   `transformer_model`: Tests that the transformer model definition is called correctly.
 
-The test file `test_predict.py` ensures that the function runs without errors (even with a dummy model).
+The tests use the following techniques:
 
-### Problem Module (`src/trainer/problem.py`)
+*   `patch`: Used to mock external dependencies, such as file system operations and calls to the Trax library.
+*   `MagicMock`: Used to create mock objects that can be used to verify that functions are called with the correct arguments.
+*   `assertRaises`: Used to verify that functions raise the correct exceptions.
 
-This module offers:
-- **`get_data_pipelines`**: Creates data pipelines from input and output files with a given batch size.
-- **`get_model`**: Instantiates and returns a new model.
-
-Tests in `test_problem.py` verify that:
-- The data pipelines yield correctly shaped NumPy arrays.
-- The model is instantiated successfully.
-
-### Training Module (`src/train.py`)
-
-The training module contains the `train_model` function which:
-- Runs a short training loop.
-- Saves the trained model to the provided directory.
-
-The test file `test_train.py` confirms that:
-- The training routine completes without error.
-- A model file is created in the specified directory.
+This comprehensive test suite ensures the robustness of the quantum circuit optimization CLI, covering a wide range of scenarios and edge cases. By systematically testing individual components and their interactions, these tests help maintain code quality and prevent regressions as the project evolves.

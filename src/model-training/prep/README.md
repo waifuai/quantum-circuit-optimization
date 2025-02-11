@@ -4,16 +4,13 @@ This directory contains scripts for preprocessing CSV data representing quantum 
 
 ## Scripts
 
-- **`csv_norm_new.py`**:  
-  Normalizes numeric features in a directory of CSV shards using universal normalization constants.  
-  - Processes shards one at a time to ensure memory efficiency.
+- **`csv_norm.py`**:  
+  Normalizes numeric features in CSV files using either shard-based or memory-based methods.  
+  - The shard-based method processes shards one at a time to ensure memory efficiency.
+  - The memory-based method loads the entire CSV file into memory and uses MinMaxScaler for normalization.
   - Normalizes statevectors, gate types, control/target qubits, angles, and gate numbers.
-  - Output files are saved with the suffix `_output.csv`.
-  
-- **`csv_norm_old.py`**:  
-  An older script for normalization that loads the entire CSV file into memory.  
-  - Uses `MinMaxScaler` for normalization.
-  - Kept for reference and not recommended for large datasets.
+  - Output files are saved with the specified output path.
+  - The script now consolidates the functionality of the old `csv_norm_new.py` and `csv_norm_old.py` scripts.
   
 - **`csv_to_tfrecord.py`**:  
   Converts a preprocessed CSV file into a TFRecord file, suitable for TensorFlow training.  
@@ -22,17 +19,13 @@ This directory contains scripts for preprocessing CSV data representing quantum 
 
 ## Workflow
 
-1. **Shard the Large CSV File (if necessary):**  
-   If your dataset is very large, split it into smaller CSV shards.  
-   Use `csv_norm_new.py` to process shards efficiently.
+1. **Normalize the Data:**  
+   Run `csv_norm.py` to normalize the numeric features. Use the `shard` method for large files and the `memory` method for smaller files.
 
-2. **Normalize the Data:**  
-   Run `csv_norm_new.py` (or `csv_norm_old.py` for smaller datasets) to normalize the numeric features.
-
-3. **Convert to TFRecord:**  
+2. **Convert to TFRecord:**  
    Use `csv_to_tfrecord.py` to convert the normalized CSV data to TFRecord format for TensorFlow model training.
 
 ## Notes
 
-- The normalization constants in `csv_norm_new.py` are based on the expected value ranges.
-- Command-line arguments allow you to specify input/output paths and other options for flexibility.
+- The normalization constants in `csv_norm.py` are based on the expected value ranges.
+- Command-line arguments allow you to specify input/output paths, the normalization method, and other options for flexibility.
