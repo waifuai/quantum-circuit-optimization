@@ -4,73 +4,29 @@ import glob
 import datetime
 import tensorflow as tf
 
+from norm_ds_dnn import config
+from norm_ds_dnn.utils import get_file_paths, split_file_paths, setup_logging_and_model_dirs, create_callbacks
+
 # -----------------------------------------------------------------------------
 # Configuration Constants
 # -----------------------------------------------------------------------------
-BUFFER_SIZE = int(5e4)
-BATCH_SIZE = 2**15
-EPOCHS = 10
-VALIDATION_SPLIT = 0.1
+BUFFER_SIZE = config.BUFFER_SIZE
+BATCH_SIZE = config.BATCH_SIZE
+EPOCHS = config.EPOCHS
+VALIDATION_SPLIT = config.VALIDATION_SPLIT
 
-DATA_DIR = "data"
-CSV_PATTERN = "*.csv"
-LOG_DIR = "logs/fit"
-MODEL_DIR = "models"
-MODEL_LOAD_PATH = os.path.join(MODEL_DIR, "qc_dnn_8m_32s")
-
-
-# -----------------------------------------------------------------------------
-# Utility Functions
-# -----------------------------------------------------------------------------
-def get_file_paths() -> list:
-    """Retrieve and sort CSV file paths from the data directory."""
-    pattern = os.path.join(DATA_DIR, CSV_PATTERN)
-    return sorted(glob.glob(pattern))
-
-
-def split_file_paths(file_paths: list) -> tuple:
-    """Split file paths into training and validation sets."""
-    n_train = int((1 - VALIDATION_SPLIT) * len(file_paths))
-    return file_paths[:n_train], file_paths[n_train:]
-
-
-def setup_logging_and_model_dirs() -> tuple:
-    """
-    Create directories for TensorBoard logs and model checkpoints.
-
-    Returns:
-        A tuple containing the log path and model save path.
-    """
-    timestamp = datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
-    save_subdir = os.path.join(timestamp, "cpu_norm_ds_dnn")
-    log_path = os.path.join(LOG_DIR, save_subdir)
-    model_path = os.path.join(MODEL_DIR, save_subdir)
-    for path in (log_path, model_path):
-        os.makedirs(path, exist_ok=True)
-    return log_path, model_path
-
-
-def create_callbacks(log_path: str, model_path: str) -> list:
-    """Initialize TensorBoard and ModelCheckpoint callbacks."""
-    tensorboard_callback = tf.keras.callbacks.TensorBoard(
-        log_dir=log_path, histogram_freq=0
-    )
-    model_callback = tf.keras.callbacks.ModelCheckpoint(
-        model_path,
-        monitor="val_mse",
-        save_best_only=True,
-        save_weights_only=False,
-        mode="auto"
-    )
-    return [tensorboard_callback, model_callback]
+DATA_DIR = config.DATA_DIR
+CSV_PATTERN = config.CSV_PATTERN
+LOG_DIR = config.LOG_DIR
+MODEL_DIR = config.MODEL_DIR
+MODEL_LOAD_PATH = config.MODEL_LOAD_PATH
 
 
 # -----------------------------------------------------------------------------
 # Data Preparation Functions
 # -----------------------------------------------------------------------------
 def labeler(example: tf.Tensor) -> tuple:
-    """
-    Parse a CSV line into features and labels.
+    """Parse a CSV line into features and labels.
 
     Assumes that:
       - The features are located starting at index 32 with a length of 287.
@@ -83,14 +39,15 @@ def labeler(example: tf.Tensor) -> tuple:
         A tuple (features, label) as tensors.
     """
     values = tf.strings.to_number(tf.strings.split(example, ","))
+    # Extract features from the tensor
     features = tf.slice(values, [32], [287])
+    # Extract labels from the tensor
     label = tf.slice(values, [0], [32])
     return features, label
 
 
 def create_dataset(file_paths: list) -> tf.data.Dataset:
-    """
-    Create a TensorFlow dataset from a list of CSV file paths.
+    """Create a TensorFlow dataset from a list of CSV file paths.
 
     The dataset:
       - Reads from the CSV files (skipping headers).
@@ -104,14 +61,19 @@ def create_dataset(file_paths: list) -> tf.data.Dataset:
         A batched tf.data.Dataset.
     """
     dataset = tf.data.Dataset.from_tensor_slices(file_paths)
+    # Interleave the lines of the files into the dataset
     dataset = dataset.interleave(
         lambda filename: tf.data.TextLineDataset(filename),
         cycle_length=tf.data.AUTOTUNE,
         num_parallel_calls=tf.data.AUTOTUNE
     )
-    dataset = dataset.skip(1)  # Skip header line
+    # Skip the header line
+    dataset = dataset.skip(1)
+    # Map the labeler function to each element of the dataset
     dataset = dataset.map(labeler, num_parallel_calls=tf.data.AUTOTUNE)
+    # Shuffle the dataset
     dataset = dataset.shuffle(BUFFER_SIZE, reshuffle_each_iteration=False)
+    # Batch the dataset
     dataset = dataset.batch(BATCH_SIZE)
     return dataset
 

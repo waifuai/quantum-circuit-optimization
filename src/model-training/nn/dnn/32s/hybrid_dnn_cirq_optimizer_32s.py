@@ -4,53 +4,29 @@ import pandas as pd
 import tensorflow as tf
 from sklearn.preprocessing import MinMaxScaler
 from sklearn.model_selection import train_test_split
-from utils.circuit_utils import create_circuit
+from utils.circuit_utils import create_circuit, simulate_circuit, calculate_fidelity
 from utils.model_utils import create_dnn_model
+from dnn.32s import config
+from dnn.32s.data_utils import load_and_preprocess_data
 
 # Configuration parameters
-BATCH_SIZE = 256
-EPOCHS = 100  # Reduced for practicality
-CSV_FILE_PATH = "./prep/qc7_8m.csv"
-NUM_QUBITS = 5
-NUM_PARAMS = 25  # 5 layers * 5 qubits
+BATCH_SIZE = config.BATCH_SIZE
+EPOCHS = config.EPOCHS
+CSV_FILE_PATH = config.CSV_FILE_PATH
+NUM_QUBITS = config.NUM_QUBITS
+NUM_PARAMS = config.NUM_PARAMS
 
 print("Using Cirq", cirq.__version__)
 print("Using TensorFlow", tf.__version__)
 
-try:
-    data = pd.read_csv(CSV_FILE_PATH)
-except FileNotFoundError:
-    print(f"Error: CSV file not found at {CSV_FILE_PATH}")
-    exit()
-
-data = data.replace(['U3Gate', 'CnotGate', 'Measure', 'BLANK'], [1, 2, 3, 4])
-
-dense_features = []
-for i in range(41):
-    n = str(i).zfill(2)
-    prefix = f"gate_{n}_"
-    dense_features.extend([
-        prefix + suffix 
-        for suffix in ["Gate_Type", "Gate_Number", "Control", "Target", "Angle_1", "Angle_2", "Angle_3"]
-    ])
-
-mms = MinMaxScaler()
-data[dense_features] = mms.fit_transform(data[dense_features])
-
-n_qubits = 5
-target_columns = [f"statevector_{bin(i)[2:].zfill(n_qubits)}" for i in range(2**n_qubits)]
-
-X = data[dense_features].values
-y = data[target_columns].values
-
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+X_train, X_test, y_train, y_test, input_dim = load_and_preprocess_data(CSV_FILE_PATH)
 
 # Convert data to TensorFlow Datasets
 train_dataset = tf.data.Dataset.from_tensor_slices((X_train, y_train)).batch(BATCH_SIZE)
 test_dataset = tf.data.Dataset.from_tensor_slices((X_test, y_test)).batch(BATCH_SIZE)
 
 # Define model dimensions
-input_dim = len(dense_features)
+input_dim = input_dim
 
 dnn_model = create_dnn_model(input_dim, NUM_PARAMS)
 
@@ -69,18 +45,14 @@ def fidelity_loss(y_true, y_pred):
         circuit = create_circuit(y_pred[i], num_qubits=NUM_QUBITS)
 
         # Simulate the circuit and get the final state vector
-        simulator = cirq.Simulator()
-        result = simulator.simulate(circuit)
-        state_vector = result.final_state_vector
+        state_vector = simulate_circuit(circuit)
 
         # Calculate fidelity
         target_state = y_true[i]
-        state_vector = state_vector / np.linalg.norm(state_vector)
-        target_state = target_state / np.linalg.norm(target_state)
-        fidelity = tf.abs(tf.tensordot(tf.cast(tf.math.conj(target_state), dtype=tf.complex128), tf.cast(state_vector, dtype=tf.complex128), axes=1))**2
+        fidelity = calculate_fidelity(state_vector, target_state)
         fidelities = fidelities.write(i, fidelity)
 
-    # Return the mean loss (1 - fidelity)
+    # Return the mean loss (1 - fidelities.stack())
     return tf.reduce_mean(1 - fidelities.stack())
 
 # Compile the model with the custom loss function

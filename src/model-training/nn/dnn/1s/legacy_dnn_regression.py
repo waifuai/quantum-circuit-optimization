@@ -5,14 +5,18 @@ import pandas as pd
 from sklearn.preprocessing import MinMaxScaler
 import tensorflow as tf
 
-def create_save_paths(logdir: str, modeldir: str, topic: str) -> (str, str):
-    """Generate timestamped log and model directories."""
-    timestamp = datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
-    subdir = os.path.join(timestamp, topic)
-    return os.path.join(logdir, subdir), os.path.join(modeldir, subdir)
+from dnn.1s import config_legacy
+from dnn.1s.utils_legacy import create_save_paths
 
 def load_and_preprocess_data(csv_file_path: str):
-    """Load CSV data, replace categorical values, and scale dense features."""
+    """Load CSV data, replace categorical values, and scale dense features.
+
+    Args:
+        csv_file_path (str): Path to the CSV file.
+
+    Returns:
+        tuple: X, y (features and labels)
+    """
     data = pd.read_csv(csv_file_path)
     data = data.replace(['U3Gate', 'CnotGate', 'Measure', 'BLANK'], [1, 2, 3, 4])
     
@@ -33,7 +37,14 @@ def load_and_preprocess_data(csv_file_path: str):
     return X, y
 
 def build_dnn_model(input_dim: int):
-    """Create a Keras model using the Functional API."""
+    """Create a Keras model using the Functional API.
+
+    Args:
+        input_dim (int): Dimension of the input layer.
+
+    Returns:
+        tf.keras.Model: A compiled Keras model.
+    """
     inputs = tf.keras.Input(shape=(input_dim,))
     x = tf.keras.layers.Dense(128, activation='relu')(inputs)
     for _ in range(4):  # total five Dense layers of 128 units
@@ -43,27 +54,11 @@ def build_dnn_model(input_dim: int):
     model.compile(optimizer='adam', loss='mse', metrics=['mse'])
     return model
 
-def main():
-    TOPIC = "qc_dnn_8m_1s"
-    HISTOGRAM_FREQ = 1
-    EPOCHS = int(1e3)
-    CSV_FILE_PATH = "./qc8m_1s.csv"
-    LOGDIR = "./logs/fit/"
-    MODELDIR = "./models/"
-    
-    os.makedirs(LOGDIR, exist_ok=True)
-    os.makedirs(MODELDIR, exist_ok=True)
-    
-    log_dir, model_dir = create_save_paths(LOGDIR, MODELDIR, TOPIC)
-    print("Logging to", log_dir)
-    print("Saving best model to", model_dir)
-    
-    X, y = load_and_preprocess_data(CSV_FILE_PATH)
-    model = build_dnn_model(input_dim=X.shape[1])
-    
-    tensorboard_callback = tf.keras.callbacks.TensorBoard(log_dir=log_dir, histogram_freq=HISTOGRAM_FREQ)
+def create_callbacks(log_dir, histogram_freq):
+    """Create callbacks for TensorBoard and ModelCheckpoint."""
+    tensorboard_callback = tf.keras.callbacks.TensorBoard(log_dir=log_dir, histogram_freq=histogram_freq)
     checkpoint_callback = tf.keras.callbacks.ModelCheckpoint(
-        filepath=os.path.join(model_dir, "model_{epoch}"),
+        filepath=os.path.join(log_dir, "model_{epoch}"),
         monitor='val_mse',
         save_best_only=False,
         save_weights_only=False,
@@ -75,13 +70,35 @@ def main():
         patience=10,
         restore_best_weights=True
     )
+    return [tensorboard_callback, checkpoint_callback, early_stopping_callback]
+
+def main():
+    TOPIC = config_legacy.TOPIC
+    HISTOGRAM_FREQ = config_legacy.HISTOGRAM_FREQ
+    EPOCHS = config_legacy.EPOCHS
+    CSV_FILE_PATH = config_legacy.CSV_FILE_PATH
+    LOGDIR = config_legacy.LOGDIR
+    MODELDIR = config_legacy.MODELDIR
+    BATCH_SIZE = config_legacy.BATCH_SIZE
+    
+    os.makedirs(LOGDIR, exist_ok=True)
+    os.makedirs(MODELDIR, exist_ok=True)
+    
+    log_dir, model_dir = create_save_paths(LOGDIR, MODELDIR, TOPIC)
+    print("Logging to", log_dir)
+    print("Saving best model to", model_dir)
+    
+    X, y = load_and_preprocess_data(CSV_FILE_PATH)
+    model = build_dnn_model(input_dim=X.shape[1])
+    
+    callbacks = create_callbacks(log_dir, HISTOGRAM_FREQ)
     
     history = model.fit(X, y,
-                        batch_size=4096,
+                        batch_size=BATCH_SIZE,
                         epochs=EPOCHS,
                         verbose=2,
                         validation_split=0.01,
-                        callbacks=[tensorboard_callback, checkpoint_callback, early_stopping_callback])
+                        callbacks=callbacks)
     
     print(f"Training complete. Logs saved to: {log_dir}")
     print(f"Models saved to: {model_dir}")

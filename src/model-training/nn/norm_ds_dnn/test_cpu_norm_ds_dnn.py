@@ -8,28 +8,30 @@ import tensorflow as tf
 import numpy as np
 
 # Import the functions and constants from your module
-import cpu_norm_ds_dnn as dnn
+from norm_ds_dnn import cpu_norm_ds_dnn as dnn
+from norm_ds_dnn import utils
+from norm_ds_dnn import config
 
 class TestCpuNormDsDnn(unittest.TestCase):
     def setUp(self):
         # Create a temporary directory to isolate file-system operations.
         self.test_dir = tempfile.mkdtemp()
         # Override DATA_DIR, LOG_DIR, and MODEL_DIR in the module to point to temporary locations.
-        self.orig_data_dir = dnn.DATA_DIR
-        self.orig_log_dir = dnn.LOG_DIR
-        self.orig_model_dir = dnn.MODEL_DIR
+        self.orig_data_dir = config.DATA_DIR
+        self.orig_log_dir = config.LOG_DIR
+        self.orig_model_dir = config.MODEL_DIR
 
-        dnn.DATA_DIR = os.path.join(self.test_dir, "data")
-        dnn.LOG_DIR = os.path.join(self.test_dir, "logs", "fit")
-        dnn.MODEL_DIR = os.path.join(self.test_dir, "models")
+        config.DATA_DIR = os.path.join(self.test_dir, "data")
+        config.LOG_DIR = os.path.join(self.test_dir, "logs", "fit")
+        config.MODEL_DIR = os.path.join(self.test_dir, "models")
 
-        os.makedirs(dnn.DATA_DIR, exist_ok=True)
+        os.makedirs(config.DATA_DIR, exist_ok=True)
     
     def tearDown(self):
         # Restore original paths
-        dnn.DATA_DIR = self.orig_data_dir
-        dnn.LOG_DIR = self.orig_log_dir
-        dnn.MODEL_DIR = self.orig_model_dir
+        config.DATA_DIR = self.orig_data_dir
+        config.LOG_DIR = self.orig_log_dir
+        config.MODEL_DIR = self.orig_model_dir
         # Remove the temporary directory and all its contents.
         shutil.rmtree(self.test_dir)
     
@@ -37,17 +39,17 @@ class TestCpuNormDsDnn(unittest.TestCase):
         # Create several dummy CSV files in the DATA_DIR.
         filenames = ["a.csv", "b.csv", "c.csv"]
         for fname in filenames:
-            with open(os.path.join(dnn.DATA_DIR, fname), "w") as f:
+            with open(os.path.join(config.DATA_DIR, fname), "w") as f:
                 f.write("col1,col2\n1,2\n")
         # The function should return the sorted list of CSV file paths.
-        paths = dnn.get_file_paths()
-        expected = sorted([os.path.join(dnn.DATA_DIR, fname) for fname in filenames])
+        paths = utils.get_file_paths()
+        expected = sorted([os.path.join(config.DATA_DIR, fname) for fname in filenames])
         self.assertEqual(paths, expected)
     
     def test_split_file_paths(self):
         # Prepare a list of file paths (simulate 10 file names).
         file_paths = [f"file_{i}.csv" for i in range(10)]
-        train, val = dnn.split_file_paths(file_paths)
+        train, val = utils.split_file_paths(file_paths)
         # With VALIDATION_SPLIT = 0.1, expect 9 training and 1 validation file.
         self.assertEqual(len(train), 9)
         self.assertEqual(len(val), 1)
@@ -55,7 +57,7 @@ class TestCpuNormDsDnn(unittest.TestCase):
     
     def test_setup_logging_and_model_dirs(self):
         # Call the function and check if directories are created.
-        log_path, model_path = dnn.setup_logging_and_model_dirs()
+        log_path, model_path = utils.setup_logging_and_model_dirs()
         self.assertTrue(os.path.isdir(log_path))
         self.assertTrue(os.path.isdir(model_path))
         # Check that the paths contain the expected subdirectory structure.
@@ -68,7 +70,7 @@ class TestCpuNormDsDnn(unittest.TestCase):
         dummy_model_path = os.path.join(self.test_dir, "dummy_model")
         os.makedirs(dummy_log_path, exist_ok=True)
         os.makedirs(dummy_model_path, exist_ok=True)
-        callbacks = dnn.create_callbacks(dummy_log_path, dummy_model_path)
+        callbacks = utils.create_callbacks(dummy_log_path, dummy_model_path)
         # Check that two callbacks are returned.
         self.assertEqual(len(callbacks), 2)
         # Check that one callback is TensorBoard and the other is ModelCheckpoint.
@@ -125,9 +127,9 @@ class TestCpuNormDsDnn(unittest.TestCase):
         dummy_model = mock.MagicMock()
         dummy_model.fit = mock.MagicMock()
         
-        with mock.patch("cpu_norm_ds_dnn.tf.keras.models.load_model", return_value=dummy_model) as load_model_mock:
+        with mock.patch("norm_ds_dnn.cpu_norm_ds_dnn.tf.keras.models.load_model", return_value=dummy_model) as load_model_mock:
             # Also create a dummy CSV file so that get_file_paths returns a valid list.
-            dummy_csv_path = os.path.join(dnn.DATA_DIR, "dummy.csv")
+            dummy_csv_path = os.path.join(config.DATA_DIR, "dummy.csv")
             with open(dummy_csv_path, "w") as f:
                 # Write header and one line
                 num_columns = 32 + 287
@@ -139,9 +141,6 @@ class TestCpuNormDsDnn(unittest.TestCase):
             dnn.main()
             
             # Check that load_model was called with the expected model load path.
-            load_model_mock.assert_called_with(dnn.MODEL_LOAD_PATH)
+            load_model_mock.assert_called_with(config.MODEL_LOAD_PATH)
             # Check that model.fit was called.
             self.assertTrue(dummy_model.fit.called)
-
-if __name__ == "__main__":
-    unittest.main()

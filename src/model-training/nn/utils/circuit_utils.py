@@ -1,5 +1,7 @@
 # utils/circuit_utils.py
 import cirq
+import tensorflow as tf
+import numpy as np
 
 def create_circuit(params, num_qubits=5, qubits=None):
     """Creates a parameterized quantum circuit.
@@ -26,3 +28,17 @@ def calculate_loss(circuit, target_state):
     final_state = result.final_state_vector
     fidelity = cirq.fidelity(final_state, target_state)
     return 1 - fidelity  # Lower loss is better
+
+def simulate_circuit(circuit):
+    """Simulates the circuit and returns the final state vector."""
+    simulator = cirq.Simulator()
+    result = simulator.simulate(circuit)
+    state_vector = result.final_state_vector
+    return state_vector
+
+def calculate_fidelity(state_vector, target_state):
+    """Calculates the fidelity between the state vector and the target state."""
+    state_vector = state_vector / np.linalg.norm(state_vector)
+    target_state = target_state / np.linalg.norm(target_state)
+    fidelity = tf.abs(tf.tensordot(tf.cast(tf.math.conj(target_state), dtype=tf.complex128), tf.cast(state_vector, dtype=tf.complex128), axes=1))**2
+    return fidelity

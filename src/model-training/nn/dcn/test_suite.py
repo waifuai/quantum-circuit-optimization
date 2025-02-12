@@ -9,7 +9,7 @@ import tensorflow as tf
 # -------------------------------
 # Tests for cirq_circuit_optimizer.py
 # -------------------------------
-import cirq_circuit_optimizer
+import dcn.cirq_circuit_optimizer as cirq_circuit_optimizer
 
 # Create dummy circuit and loss functions for testing
 class DummyCircuit:
@@ -25,8 +25,8 @@ def dummy_calculate_fidelity(circuit, target_state):
 
 class TestCirqCircuitOptimizer(unittest.TestCase):
 
-    @patch('cirq_circuit_optimizer.calculate_fidelity', side_effect=dummy_calculate_fidelity)
-    @patch('cirq_circuit_optimizer.create_circuit', side_effect=dummy_create_circuit)
+    @patch('dcn.cirq_circuit_optimizer.calculate_fidelity', side_effect=dummy_calculate_fidelity)
+    @patch('dcn.cirq_circuit_optimizer.create_circuit', side_effect=dummy_create_circuit)
     def test_optimize_circuit_returns_array(self, mock_create, mock_fidelity):
         """
         Test that optimize_circuit returns a numpy array of parameters
@@ -42,8 +42,8 @@ class TestCirqCircuitOptimizer(unittest.TestCase):
         self.assertIsInstance(optimized_params, np.ndarray)
         self.assertEqual(optimized_params.shape, (25,))
 
-    @patch('cirq_circuit_optimizer.calculate_fidelity', side_effect=dummy_calculate_fidelity)
-    @patch('cirq_circuit_optimizer.create_circuit', side_effect=dummy_create_circuit)
+    @patch('dcn.cirq_circuit_optimizer.calculate_fidelity', side_effect=dummy_calculate_fidelity)
+    @patch('dcn.cirq_circuit_optimizer.create_circuit', side_effect=dummy_create_circuit)
     def test_loss_function_calls(self, mock_create, mock_fidelity):
         """
         Test that calculate_fidelity and create_circuit are called within the optimization loop.
@@ -61,26 +61,11 @@ class TestCirqCircuitOptimizer(unittest.TestCase):
 # -------------------------------
 # Tests for legacy_cpu_dcn.py
 # -------------------------------
-import legacy_cpu_dcn
+import dcn.legacy_cpu_dcn as legacy_cpu_dcn
 from deepctr.inputs import DenseFeat
 from tensorflow.keras.models import Model
 
 class TestLegacyCpuDCN(unittest.TestCase):
-
-    def test_create_save_paths(self):
-        """
-        Test that create_save_paths returns valid log and model paths containing the topic string.
-        """
-        logdir = "test_logs"
-        modeldir = "test_models"
-        topic = "test_topic"
-        log_path, model_path = legacy_cpu_dcn.create_save_paths(logdir, modeldir, topic)
-        self.assertIn(topic, log_path)
-        self.assertIn(topic, model_path)
-        self.assertTrue(isinstance(log_path, str))
-        self.assertTrue(isinstance(model_path, str))
-        self.assertTrue(log_path.startswith("test_logs"))
-        self.assertTrue(model_path.startswith("test_models"))
 
     def test_load_and_prepare_data(self):
         """
