@@ -10,6 +10,7 @@ import pandas as pd
 from tqdm import tqdm
 from typing import List, Dict
 from sklearn.preprocessing import MinMaxScaler
+from src import config
 
 
 def generate_statevector_keys(num_qubits: int) -> List[str]:
@@ -152,7 +153,7 @@ def generate_feature_names(num_gates: int) -> list:
     return features
 
 
-def process_csv(input_path: Path, output_path: Path, method: str, num_qubits: int = 5, num_gates: int = 40) -> None:
+def process_csv(input_path: Path, output_path: Path, method: str, num_qubits: int = config.NUM_QUBITS, num_gates: int = 40) -> None:
     """
     Normalizes a CSV file using either shard-based or memory-based methods.
 
@@ -193,7 +194,7 @@ def main() -> None:
         "-nq",
         "--num_qubits",
         type=int,
-        default=5,
+        default=config.NUM_QUBITS,
         help="Number of qubits",
     )
     parser.add_argument(

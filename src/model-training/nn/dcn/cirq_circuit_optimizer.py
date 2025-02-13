@@ -1,13 +1,14 @@
 # dcn/cirq_circuit_optimizer.py
 import cirq
-import numpy asnp
+import numpy as np
 import pandas as pd
 from sklearn.model_selection import train_test_split
 from scipy.optimize import minimize
 from utils.circuit_utils import create_circuit
+from src import config
 
 # Configuration parameters
-BATCH_SIZE = 128
+BATCH_SIZE = config.BATCH_SIZE
 EPOCHS = 3
 
 print("Using Cirq", cirq.__version__)

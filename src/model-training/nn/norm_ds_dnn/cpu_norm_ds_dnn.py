@@ -4,8 +4,8 @@ import glob
 import datetime
 import tensorflow as tf
 
-from norm_ds_dnn import config
-from norm_ds_dnn.utils import get_file_paths, split_file_paths, setup_logging_and_model_dirs, create_callbacks
+from src import config
+from src.model-training.nn.norm_ds_dnn.utils import get_file_paths, split_file_paths, setup_logging_and_model_dirs, create_callbacks
 
 # -----------------------------------------------------------------------------
 # Configuration Constants

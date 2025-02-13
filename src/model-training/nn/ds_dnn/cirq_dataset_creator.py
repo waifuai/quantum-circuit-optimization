@@ -6,16 +6,16 @@ import cirq
 import tensorflow as tf
 
 from qc.circuit_generation import GateOperationData
-from ds_dnn import config
-from ds_dnn.data_utils import decode_csv, preprocess_data, parse_gate_operation
-from ds_dnn.circuit_utils import features_to_circuit
+from src import config
+from src.model-training.nn.ds_dnn.data_utils import decode_csv, preprocess_data, parse_gate_operation
+from src.model-training.nn.ds_dnn.circuit_utils import features_to_circuit
 
 # Configuration parameters
 BUFFER_SIZE = config.BUFFER_SIZE
 BATCH_SIZE = config.BATCH_SIZE
 VALIDATION_SPLIT = config.VALIDATION_SPLIT
 DATA_AUGMENTATION = config.DATA_AUGMENTATION
-DIR_PATH = config.DIR_PATH
+DIR_PATH = config.DATA_DIR
 
 # Data directory and file paths
 file_paths = sorted(glob.glob(os.path.join(DIR_PATH, "*.csv")))
@@ -42,7 +42,7 @@ def create_circuit_dataset(file_paths):
     # Preprocess features and labels
     dataset = dataset.map(preprocess_data, num_parallel_calls=tf.data.AUTOTUNE)
 
-    qubits = cirq.LineQubit.range(5)
+    qubits = cirq.LineQubit.range(config.NUM_QUBITS)
     def map_to_circuits(processed_gates, labels):
         circuit = tf.py_function(
             lambda g: features_to_circuit(g.numpy(), qubits),

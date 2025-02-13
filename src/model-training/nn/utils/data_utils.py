@@ -2,12 +2,15 @@ import pandas as pd
 import tensorflow as tf
 from sklearn.preprocessing import MinMaxScaler
 from sklearn.model_selection import train_test_split
+from src import config
 
-def load_and_preprocess_data(csv_file_path):
+def load_and_preprocess_data(csv_file_path, target_type='single', n_qubits=5):
     """Loads and preprocesses the data.
 
     Args:
         csv_file_path (str): Path to the CSV file.
+        target_type (str): 'single' for statevector_00000, 'multi' for all statevectors.
+        n_qubits (int): Number of qubits, used if target_type is 'multi'.
 
     Returns:
         tuple: X_train, X_test, y_train, y_test, input_dim
@@ -33,7 +36,13 @@ def load_and_preprocess_data(csv_file_path):
     mms = MinMaxScaler(feature_range=(0, 1))
     data[dense_features] = mms.fit_transform(data[dense_features])
 
-    target = ['statevector_00000']
+    if target_type == 'single':
+        target = ['statevector_00000']
+    elif target_type == 'multi':
+        target = [f"statevector_{bin(i)[2:].zfill(n_qubits)}" for i in range(2**n_qubits)]
+    else:
+        raise ValueError("Invalid target_type. Choose 'single' or 'multi'.")
+
     X = data[dense_features].values
     y = data[target].values
 

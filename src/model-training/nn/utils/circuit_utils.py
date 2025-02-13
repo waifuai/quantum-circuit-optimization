@@ -3,22 +3,34 @@ import cirq
 import tensorflow as tf
 import numpy as np
 
-def create_circuit(params, num_qubits=5, qubits=None):
+def create_circuit(params, num_qubits=5, qubits=None, circuit_type='default'):
     """Creates a parameterized quantum circuit.
     
-    If qubits is None, uses a default 5-qubit register.
+    Args:
+        params: Parameters for the circuit gates.
+        num_qubits: Number of qubits in the circuit.
+        qubits: Optional list of qubits. If not provided, uses a default 5-qubit register.
+        circuit_type: Type of circuit to create ('default').
+
+    Returns:
+        A cirq.Circuit object.
     """
     if qubits is None:
         qubits = cirq.LineQubit.range(num_qubits)
-        qubits = cirq.LineQubit.range(5)
+
     circuit = cirq.Circuit()
     param_idx = 0
-    for _ in range(5):  # 5 layers
-        for j in range(num_qubits):
-            circuit.append(cirq.rx(params[param_idx])(qubits[j]))
-            param_idx += 1
-        for j in range(num_qubits - 1):
-            circuit.append(cirq.CNOT(qubits[j], qubits[j+1]))
+
+    if circuit_type == 'default':
+        for _ in range(5):  # 5 layers
+            for j in range(num_qubits):
+                circuit.append(cirq.rx(params[param_idx])(qubits[j]))
+                param_idx += 1
+            for j in range(num_qubits - 1):
+                circuit.append(cirq.CNOT(qubits[j], qubits[j+1]))
+    else:
+        raise ValueError(f"Invalid circuit_type: {circuit_type}")
+
     return circuit
 
 def calculate_loss(circuit, target_state):
@@ -42,3 +54,29 @@ def calculate_fidelity(state_vector, target_state):
     target_state = target_state / np.linalg.norm(target_state)
     fidelity = tf.abs(tf.tensordot(tf.cast(tf.math.conj(target_state), dtype=tf.complex128), tf.cast(state_vector, dtype=tf.complex128), axes=1))**2
     return fidelity
+
+def calculate_fidelity_loss(y_true, y_pred, num_qubits, circuit_type):
+    """
+    Calculates the fidelity between the output statevector
+    of the quantum circuit and the target state.
+    """
+    # Reshape y_pred to (batch_size, num_params)
+    num_params = num_qubits * 5 #hardcoded layers
+    y_pred = tf.reshape(y_pred, (-1, num_params))
+
+    fidelities = tf.TensorArray(tf.float32, size=0, dynamic_size=True)
+    
+    for i in tf.range(tf.shape(y_true)[0]):
+        # Create the quantum circuit with predicted parameters
+        circuit = create_circuit(y_pred[i], num_qubits=num_qubits, circuit_type=circuit_type)
+
+        # Simulate the circuit and get the final state vector
+        state_vector = simulate_circuit(circuit)
+
+        # Calculate fidelity
+        target_state = y_true[i]
+        fidelity = calculate_fidelity(state_vector, target_state)
+        fidelities = fidelities.write(i, fidelity)
+
+    # Return the mean loss (1 - fidelities.stack())
+    return tf.reduce_mean(1 - fidelities.stack())

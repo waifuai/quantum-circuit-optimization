@@ -1,4 +1,5 @@
 import tensorflow as tf
+from src import config
 
 def decode_csv(example):
     """Decodes a CSV line into features and labels."""
@@ -30,7 +31,6 @@ def preprocess_data(gate_operations, labels):
     
     def augment_gate(gate_type, control, target, angle1, angle2, angle3):
         """Applies data augmentation to a single gate operation."""
-        from ds_dnn import config
         if config.DATA_AUGMENTATION:
             # Add small random rotations to gate angles
             angle1 += tf.random.uniform(shape=[], minval=-0.1, maxval=0.1, dtype=tf.float32)

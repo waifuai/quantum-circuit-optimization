@@ -9,16 +9,17 @@ from deepctr.inputs import DenseFeat
 from tensorflow.keras.layers import BatchNormalization, Dropout, Dense, Input
 from tensorflow.keras.models import Model
 
-from dcn import config
+from src import config
 from dcn.utils import create_save_paths, dataframe_to_dataset
+from utils.model_utils import BaseModel
 
 # Configuration parameters
 BATCH_SIZE = config.BATCH_SIZE
 TOPIC = config.TOPIC
 HISTOGRAM_FREQ = config.HISTOGRAM_FREQ
-LOGDIR = config.LOGDIR
+LOGDIR = config.LOG_DIR
 EPOCHS = config.EPOCHS
-MODELDIR = config.MODELDIR
+MODELDIR = config.MODEL_DIR
 NUM_CIRCUIT_PARAMS = config.NUM_CIRCUIT_PARAMS
 CSV_FILE_PATH = config.CSV_FILE_PATH
 
@@ -42,6 +43,45 @@ def load_and_prepare_data(csv_path: str, batch_size: int):
 
     return train_ds, test_ds, dense_features
 
+class DCNModel(BaseModel, Model):
+    def __init__(self, linear_features, dnn_features, num_circuit_params):
+        super().__init__()
+        self.linear_feature_columns = [DenseFeat(feat, 1) for feat in linear_features]
+        self.dnn_feature_columns = [DenseFeat(feat, 1) for feat in dnn_features]
+        self.input_layer = Input(shape=(len(linear_features),), name='dcn_input')
+        self.dcn = DCN(self.linear_feature_columns, self.dnn_feature_columns, cross_num=1,
+                    dnn_hidden_units=(256, 256, 128, 128, 64), task='regression')(self.input_layer)
+        self.bn = BatchNormalization()(self.dcn)
+        self.dropout = Dropout(0.25)(self.bn)
+        self.parameter_prediction_layer = Dense(num_circuit_params, activation='linear', name='circuit_params')(self.dropout)
+        self.model = Model(inputs=self.input_layer, outputs=[self.dcn, self.parameter_prediction_layer])
+
+        # Compile the model with two losses and two sets of metrics
+        # The model is compiled with two losses: mean squared error (MSE) for both the DCN output and the circuit parameters.
+        self.model.compile(optimizer="adam", 
+                      loss={'dcn': 'mse', 'circuit_params': 'mse'},  # Example loss for parameter prediction
+                      metrics={'dcn': tf.keras.metrics.RootMeanSquaredError(), 'circuit_params': 'mse'})
+
+    def train(self, train_data, epochs, validation_data=None, callbacks=None):
+        history = self.model.fit(
+            x=[item[0] for item in train_data],  # Input features
+            y=[item[1] for item in train_data],  # DCN and circuit_params targets
+            epochs=epochs,
+            verbose=1,
+            validation_data=([item[0] for item in validation_data], [item[1] for item in validation_data]),
+            callbacks=callbacks
+        )
+        return history
+
+    def predict(self, input_data):
+        return self.model.predict(input_data)
+
+    def save(self, filepath):
+        self.model.save(filepath)
+
+    def load(self, filepath):
+        self.model = tf.keras.models.load_model(filepath)
+
 def build_dcn_model(linear_features, dnn_features, num_circuit_params):
     """Define and compile the DCN model.
 
@@ -53,37 +93,7 @@ def build_dcn_model(linear_features, dnn_features, num_circuit_params):
     Returns:
         A compiled Keras model.
     """
-    linear_feature_columns = [DenseFeat(feat, 1) for feat in linear_features]
-    dnn_feature_columns = [DenseFeat(feat, 1) for feat in dnn_features]
-
-    # Define input layer
-    input_layer = Input(shape=(len(linear_features),), name='dcn_input')
-
-    # Build DCN model
-    # The DCN model combines linear and deep learning components to capture both low-order and high-order feature interactions.
-    dcn = DCN(linear_feature_columns, dnn_feature_columns, cross_num=1,
-                dnn_hidden_units=(256, 256, 128, 128, 64), task='regression')(input_layer) # Increased DNN units
-    
-    # Add batch normalization and dropout
-    # Batch normalization helps to stabilize training and improve generalization.
-    bn = BatchNormalization()(dcn)
-    # Dropout helps to prevent overfitting.
-    dropout = Dropout(0.25)(bn)
-
-    # Parameter prediction layer
-    # This layer predicts the parameters for the quantum circuit.
-    parameter_prediction_layer = Dense(num_circuit_params, activation='linear', name='circuit_params')(dropout)
-
-    # Define the model with two outputs: DCN output and circuit parameters
-    # The model has two outputs: the DCN output and the predicted circuit parameters.
-    model = Model(inputs=input_layer, outputs=[dcn, parameter_prediction_layer])
-
-    # Compile the model with two losses and two sets of metrics
-    # The model is compiled with two losses: mean squared error (MSE) for both the DCN output and the circuit parameters.
-    model.compile(optimizer="adam", 
-                  loss={'dcn': 'mse', 'circuit_params': 'mse'},  # Example loss for parameter prediction
-                  metrics={'dcn': tf.keras.metrics.RootMeanSquaredError(), 'circuit_params': 'mse'})
-    return model
+    return DCNModel(linear_features, dnn_features, num_circuit_params)
 
 def prepare_data(ds):
     """Separate features and labels for training."""
@@ -122,12 +132,10 @@ def main():
     test_data = list(prepare_data(test_ds))
 
     # Train the model
-    history = model.fit(
-        x=[item[0] for item in train_data],  # Input features
-        y=[item[1] for item in train_data],  # DCN and circuit_params targets
-        epochs=EPOCHS,
-        verbose=1,
-        validation_data=([item[0] for item in test_data], [item[1] for item in test_data]),
+    history = model.train(
+        train_data,  # Input features
+        EPOCHS,
+        validation_data=test_data,
         callbacks=callbacks
     )
 
