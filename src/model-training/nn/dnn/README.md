@@ -12,19 +12,14 @@ The original code in this project used TensorFlow/Keras to train DNNs for regres
 
 This subdirectory contains code related to the optimization of a 1-second quantum circuit.
 
--   **`cirq_dnn_optimizer.py`**: The main script for the hybrid DNN-Cirq approach for the 1s circuit. It defines a DNN that outputs parameters for a parameterized Cirq circuit.
--   **`cpu_dnn_1s.py`**: (Reference) Original TensorFlow/Keras DNN regression code.
--   **`cpu_dnn_32s_resume.py`**: (Reference) Original TensorFlow/Keras DNN regression code.
--   **`cpu_dnn_32s.py`**: (Reference) Original TensorFlow/Keras DNN regression code.
+-   **`hybrid_dnn_cirq_optimizer.py`**: The main script for the hybrid DNN-Cirq approach for the 1s circuit.
 -   **README.md**: Documentation for the `1s` subdirectory.
 
 ### 32s
 
 This subdirectory contains code related to the optimization of a 32-second quantum circuit.
 
--   **`hybrid_dnn_cirq_optimizer_32s.py`**: The main script for the hybrid DNN-Cirq approach for the 32s circuit. It defines a DNN that outputs parameters for a parameterized Cirq circuit.
--   **`cpu_dnn_32s.py`**: (Reference) Original TensorFlow/Keras DNN regression code.
--   **`cpu_dnn_32s_resume.py`**: (Reference) Original TensorFlow/Keras DNN regression code.
+-   **`hybrid_dnn_cirq_optimizer_32s.py`**: The main script for the hybrid DNN-Cirq approach for the 32s circuit.
 -   **README.md**: Documentation for the `32s` subdirectory.
 
 ## Common Features
@@ -48,7 +43,7 @@ Both subdirectories share these key features:
 
 3. **Run Scripts**:
 
-    -   For the 1s circuit: `python 1s/cirq_dnn_optimizer.py`
+    -   For the 1s circuit: `python 1s/hybrid_dnn_cirq_optimizer.py`
     -   For the 32s circuit: `python 32s/hybrid_dnn_cirq_optimizer_32s.py`
 
     These scripts will create DNN models, generate parameters for quantum circuits using the DNNs, and print the generated circuits.

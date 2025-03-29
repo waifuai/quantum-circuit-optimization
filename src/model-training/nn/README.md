@@ -8,22 +8,16 @@ The project is organized into several directories, each focusing on a specific a
 
 ```
 src/model-training/nn/
-├── dcn/                 # Deep Crossing Network (DCN) implementation and Quantum Circuit Optimization
-│   ├── cirq_circuit_optimizer.py # Quantum circuit optimizer using Cirq
-│   ├── legacy_cpu_dcn.py         # DCN implementation using TensorFlow 2 and DeepCTR
-│   ├── test_suite.py             # Unit tests for DCN and Cirq optimizer
-│   └── README.md                # Documentation for the DCN module
+├── dcn/                 # Quantum Circuit Optimization using SciPy/Cirq
+│   ├── cirq_circuit_optimizer.py # Quantum circuit optimizer using Cirq and SciPy
+│   ├── test_suite.py             # Unit tests (may need updating)
+│   └── README.md                # Documentation for the DCN module (now focused on optimizer)
 ├── dnn/                 # DNN implementations for 1-second and 32-second circuit optimization
 │   ├── 1s/              # 1-second circuit optimization
-│   │   ├── cirq_dnn_optimizer.py          # Hybrid DNN-Cirq optimizer for 1s circuit
-│   │   ├── cpu_dnn_1s.py                 # (Reference) Original TensorFlow/Keras DNN for 1s circuit
-│   │   ├── cpu_dnn_32s_resume.py          # (Reference) Original TensorFlow/Keras DNN for 32s circuit (resume)
-│   │   ├── cpu_dnn_32s.py                 # (Reference) Original TensorFlow/Keras DNN for 32s circuit
+│   │   ├── hybrid_dnn_cirq_optimizer.py # Hybrid DNN-Cirq optimizer for 1s circuit
 │   │   └── README.md                     # Documentation for the 1s circuit optimization
 │   ├── 32s/             # 32-second circuit optimization
 │   │   ├── hybrid_dnn_cirq_optimizer_32s.py # Hybrid DNN-Cirq optimizer for 32s circuit
-│   │   ├── cpu_dnn_32s.py                 # (Reference) Original TensorFlow/Keras DNN for 32s circuit
-│   │   ├── cpu_dnn_32s_resume.py          # (Reference) Original TensorFlow/Keras DNN for 32s circuit (resume)
 │   │   └── README.md                     # Documentation for the 32s circuit optimization
 │   └── README.md        # Documentation for the DNN module
 ├── ds_dnn/              # Dataset creation and preprocessing for quantum circuit optimization
@@ -33,9 +27,11 @@ src/model-training/nn/
 ├── norm_ds_dnn/         # DNN training with a normalized dataset
 │   ├── cpu_norm_ds_dnn.py      # Trains a DNN on a normalized dataset using TensorFlow
 │   └── README.md                # Documentation for the normalized dataset DNN module
-└── utils/               # Common utility functions for circuit creation and DNN model building
-    ├── circuit_utils.py        # Helper functions for creating and evaluating quantum circuits using Cirq
-    ├── model_utils.py          # Helper functions for building DNN models with TensorFlow
+└── utils/               # Common utility functions (consolidated)
+    ├── circuit_utils.py        # Helper functions for Cirq circuits
+    ├── data_utils.py           # Helper functions for data loading/preprocessing
+    ├── model_utils.py          # Helper functions for building DNN models
+    ├── path_utils.py           # Helper functions for creating log/model paths
     └── README.md                # Documentation for the utility modules
 ```
 
@@ -43,13 +39,12 @@ src/model-training/nn/
 
 ### Deep Crossing Network (DCN) (`dcn/`)
 
-This module contains an implementation of a Deep Crossing Network (DCN) designed for regression tasks, particularly for predicting properties of quantum circuits. It also includes a Cirq-based quantum circuit optimizer that uses a gradient descent approach.
+This module now primarily contains a Cirq-based quantum circuit optimizer that uses SciPy's optimization routines. The original DCN implementation has been removed.
 
 **Key Features:**
 
--   **`legacy_cpu_dcn.py`**: Trains a DCN model to predict the statevector output of a quantum circuit.
--   **`cirq_circuit_optimizer.py`**: Optimizes the parameters of a quantum circuit to minimize the difference between the circuit's output and a target statevector.
--   **`test_suite.py`**: Contains unit tests for both the DCN and Cirq optimizer.
+-   **`cirq_circuit_optimizer.py`**: Optimizes the parameters of a quantum circuit to minimize the difference between the circuit's output and a target statevector using `scipy.optimize.minimize`.
+-   **`test_suite.py`**: Contains unit tests (may need updating).
 
 ### Deep Neural Networks (DNN) (`dnn/`)
 
@@ -57,9 +52,8 @@ This module focuses on using DNNs for quantum circuit optimization, with specifi
 
 **Key Features:**
 
--   **`1s/cirq_dnn_optimizer.py`**: Hybrid DNN-Cirq optimizer for 1-second circuits.
+-   **`1s/hybrid_dnn_cirq_optimizer.py`**: Hybrid DNN-Cirq optimizer for 1-second circuits.
 -   **`32s/hybrid_dnn_cirq_optimizer_32s.py`**: Hybrid DNN-Cirq optimizer for 32-second circuits.
--   **Reference Implementations**: Includes original TensorFlow/Keras DNN code for both 1s and 32s circuits.
 
 ### Dataset Creation and Preprocessing (`ds_dnn/`)
 
@@ -82,12 +76,14 @@ This module contains a script for training a DNN using a normalized dataset stor
 
 ### Utility Functions (`utils/`)
 
-This module provides common utility functions used across the project. It includes helpers for creating quantum circuits using Cirq and building DNN models with TensorFlow.
+This module provides consolidated, common utility functions used across the `nn` project scripts.
 
 **Key Features:**
 
--   **`circuit_utils.py`**: Functions for creating parameterized quantum circuits and calculating the loss between a circuit's output and a target state.
--   **`model_utils.py`**: Functions for creating DNN models that output circuit parameters.
+-   **`circuit_utils.py`**: Functions for creating parameterized quantum circuits and calculating fidelity/loss.
+-   **`data_utils.py`**: Functions for loading and preprocessing data from CSVs and converting DataFrames to TensorFlow Datasets.
+-   **`model_utils.py`**: Base class and helpers for creating DNN models.
+-   **`path_utils.py`**: Function for generating timestamped log and model directory paths.
 
 ## Getting Started
 
@@ -107,8 +103,9 @@ Ensure that the required data files (e.g., `qc8m_1s.csv`, `qc7_8m.csv`, and CSV 
 
 Each module contains scripts that can be run independently. Refer to the README files within each module for specific instructions on how to run the scripts. For example:
 
--   To train the DCN model: `python dcn/legacy_cpu_dcn.py`
--   To run the hybrid DNN-Cirq optimizer for 1s circuits: `python dnn/1s/cirq_dnn_optimizer.py`
+-   To run the Cirq optimizer: `python dcn/cirq_circuit_optimizer.py`
+-   To run the hybrid DNN-Cirq optimizer for 1s circuits: `python dnn/1s/hybrid_dnn_cirq_optimizer.py`
+-   To run the hybrid DNN-Cirq optimizer for 32s circuits: `python dnn/32s/hybrid_dnn_cirq_optimizer_32s.py`
 -   To create a dataset of quantum circuits: `python ds_dnn/cirq_dataset_creator.py`
 -   To train a DNN on a normalized dataset: `python norm_ds_dnn/cpu_norm_ds_dnn.py`
 

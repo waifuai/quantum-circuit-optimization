@@ -50,3 +50,19 @@ def load_and_preprocess_data(csv_file_path, target_type='single', n_qubits=5):
     input_dim = len(dense_features)
     
     return X_train, X_test, y_train, y_test, input_dim
+
+
+def dataframe_to_dataset(dataframe, batch_size, shuffle=True):
+    """Convert Pandas DataFrame to tf.data.Dataset.
+    
+    Specifically designed for the DCN model which expects a single target 
+    'statevector_00000' and features as a dictionary.
+    """
+    target = ['statevector_00000'] # Specific target for DCN
+    dataframe = dataframe.copy()
+    labels = dataframe.pop(target[0])
+    ds = tf.data.Dataset.from_tensor_slices((dict(dataframe), labels))
+    if shuffle:
+        ds = ds.shuffle(buffer_size=len(dataframe))
+    ds = ds.batch(batch_size)
+    return ds

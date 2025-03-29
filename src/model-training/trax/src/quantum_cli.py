@@ -11,8 +11,8 @@ from trax import layers as tl
 from trax.supervised import training
 from typing import Tuple, List, Dict, Any
 
-from src.model-training.trax.src import data
-from src.model-training.trax.src import model
+from model-training.trax.src import data
+from model-training.trax.src import model
 
 
 def preprocess_data(input_file: str, input_processed_file: str, output_processed_file: str) -> None:

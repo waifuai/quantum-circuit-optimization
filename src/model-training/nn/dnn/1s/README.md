@@ -4,10 +4,7 @@ This directory contains code for optimizing quantum circuits using a hybrid appr
 
 ## Files
 
--   **cirq_dnn_optimizer.py**: This file contains the main code for the hybrid DNN-Cirq approach. It defines a DNN model that outputs parameters for a parameterized quantum circuit in Cirq. It also includes a placeholder for a custom loss function that would integrate the quantum circuit output into the DNN training.
--   **cpu_dnn_1s.py**: This was the original file that used TensorFlow/Keras for DNN regression. It's kept here for reference but is no longer used.
--   **cpu_dnn_32s_resume.py**: kept here for reference but is no longer used.
--   **cpu_dnn_32s.py**: kept here for reference but is no longer used.
+-   **hybrid_dnn_cirq_optimizer.py**: This file contains the main code for the hybrid DNN-Cirq approach for 1s circuits. It defines a DNN model that outputs parameters for a parameterized quantum circuit in Cirq. It uses the central `config.py` for settings and utility functions from `src/model-training/nn/utils/`. It includes a placeholder for a custom loss function that would integrate the quantum circuit output into the DNN training.
 
 ## Refactoring Changes
 

@@ -1,5 +1,0 @@
-BATCH_SIZE = 4096
-EPOCHS = int(1e3)
-CSV_FILE_PATH = "./qc8m_1s.csv"
-NUM_QUBITS = 5
-NUM_PARAMS = 25

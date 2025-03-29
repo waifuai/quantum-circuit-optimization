@@ -2,7 +2,7 @@ import cirq
 import numpy as np
 from typing import Dict
 
-from src.data-generation.qc.circuit_generation import QuantumConfig
+from data-generation.qc.circuit_generation import QuantumConfig
 
 def simulate_with_noise(
     circuit: cirq.Circuit,

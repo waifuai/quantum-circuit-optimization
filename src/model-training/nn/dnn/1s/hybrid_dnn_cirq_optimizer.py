@@ -4,18 +4,18 @@ import pandas as pd
 import tensorflow as tf
 from sklearn.preprocessing import MinMaxScaler
 from sklearn.model_selection import train_test_split
-from utils.circuit_utils import create_circuit, simulate_circuit, calculate_fidelity, calculate_fidelity_loss
-from utils.model_utils import create_dnn_model, DNNModel
-from src import config
-from src.model-training.nn.utils.data_utils import load_and_preprocess_data
+from model-training.nn.utils.circuit_utils import create_circuit, simulate_circuit, calculate_fidelity, calculate_fidelity_loss # Corrected path
+from model-training.nn.utils.model_utils import create_dnn_model, DNNModel # Corrected path
+import config # Corrected import
+from model-training.nn.utils.data_utils import load_and_preprocess_data # Corrected path
 
-# Configuration parameters
-BATCH_SIZE = config.BATCH_SIZE
-EPOCHS = config.EPOCHS
-CSV_FILE_PATH = config.CSV_FILE_PATH
-NUM_QUBITS = config.NUM_QUBITS
-NUM_PARAMS = config.NUM_PARAMS
-CIRCUIT_TYPE = config.CIRCUIT_TYPE
+# Configuration parameters (using centralized config)
+BATCH_SIZE = config.DNN_1S_BATCH_SIZE
+EPOCHS = config.DNN_1S_EPOCHS
+CSV_FILE_PATH = config.DNN_1S_CSV_FILE_PATH
+NUM_QUBITS = config.DNN_NUM_QUBITS # Use general DNN value
+NUM_PARAMS = config.DNN_NUM_PARAMS # Use general DNN value
+CIRCUIT_TYPE = config.DNN_CIRCUIT_TYPE # Use general DNN value
 
 print("Using Cirq", cirq.__version__)
 print("Using TensorFlow", tf.__version__)

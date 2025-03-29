@@ -4,22 +4,29 @@ import glob
 import datetime
 import tensorflow as tf
 
-from src import config
-from src.model-training.nn.norm_ds_dnn.utils import get_file_paths, split_file_paths, setup_logging_and_model_dirs, create_callbacks
+import config # Corrected import
+from model-training.nn.norm_ds_dnn.utils import get_file_paths, split_file_paths, create_callbacks # Corrected path
+from model-training.nn.utils.path_utils import setup_logging_and_model_dirs # Corrected path
 
 # -----------------------------------------------------------------------------
-# Configuration Constants
+# Configuration Constants (using centralized config)
 # -----------------------------------------------------------------------------
+# These seem to be general data/training settings used by this script
 BUFFER_SIZE = config.BUFFER_SIZE
-BATCH_SIZE = config.BATCH_SIZE
-EPOCHS = config.EPOCHS
+BATCH_SIZE = config.NORM_DS_DNN_BATCH_SIZE # Use specific batch size
+EPOCHS = config.NORM_DS_DNN_EPOCHS # Use specific epochs
 VALIDATION_SPLIT = config.VALIDATION_SPLIT
 
+# Data location settings
 DATA_DIR = config.DATA_DIR
 CSV_PATTERN = config.CSV_PATTERN
+
+# Logging/Model settings
 LOG_DIR = config.LOG_DIR
 MODEL_DIR = config.MODEL_DIR
-MODEL_LOAD_PATH = config.MODEL_LOAD_PATH
+# MODEL_LOAD_PATH = config.NORM_DS_DNN_MODEL_LOAD_PATH # Uncomment and define in config.py if needed
+# For now, comment out the direct assignment as it's not defined in the central config yet
+# MODEL_LOAD_PATH = config.MODEL_LOAD_PATH # This line will cause an error if MODEL_LOAD_PATH is not in config.py
 
 
 # -----------------------------------------------------------------------------

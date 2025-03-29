@@ -7,9 +7,9 @@ from tqdm import tqdm
 import cirq
 import tensorflow as tf
 from typing import List, Dict, Any
-from src.data-generation.qc.circuit_generation import generate_random_circuit, circuit_to_dict, QuantumConfig
-from src.data-generation.qc.simulation import simulate_with_noise
-from src.data-generation.qc.optimization import optimize_circuit
+from data-generation.qc.circuit_generation import generate_random_circuit, circuit_to_dict, QuantumConfig
+from data-generation.qc.simulation import simulate_with_noise
+from data-generation.qc.optimization import optimize_circuit
 
 
 def generate_qc_dict(qubits: List[cirq.Qid], n_gates: int) -> Dict[str, Any]:
