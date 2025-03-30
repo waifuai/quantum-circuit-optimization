@@ -6,6 +6,8 @@ DEFAULT_EPOCHS = int(1e3)
 DEFAULT_NUM_QUBITS = 5
 DEFAULT_NUM_PARAMS = 25 # Often 5 layers * 5 qubits
 DEFAULT_HISTOGRAM_FREQ = 1
+NUM_QUBITS = DEFAULT_NUM_QUBITS
+BATCH_SIZE = DEFAULT_BATCH_SIZE
 
 # --- Data Settings ---
 BUFFER_SIZE = int(5e4) # Used by norm_ds_dnn, ds_dnn?
