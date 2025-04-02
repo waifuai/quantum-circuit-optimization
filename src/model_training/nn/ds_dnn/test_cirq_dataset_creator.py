@@ -86,17 +86,21 @@ def test_create_circuit_dataset(tmp_path, monkeypatch):
 
     # Mock preprocess_data to return tensors compatible with map_to_circuits input
     def mock_preprocess_data_func(gate_operations, labels):
-        # Return structure: (processed_gates_list_of_tuples, labels_tensor)
-        # processed_gates should be a list of tuples/lists suitable for features_to_circuit
-        # Let's return a list containing one dummy gate tuple
-        dummy_gate_tuple = ("U3Gate", 0.0, 1.0, 0.1, 0.2, 0.3) # Example tuple
-        return ([dummy_gate_tuple] * num_gate_ops, labels) # Return list of tuples
+        # Return structure: (gate_types_tensor, numeric_params_tensor, labels_tensor)
+        # This structure consists of tensors, which Dataset.map can handle.
+        gate_types = tf.constant(["dummy_type"] * num_gate_ops, dtype=tf.string)
+        # Combine control, target, angle1, angle2, angle3 into one tensor
+        numeric_params = tf.zeros((num_gate_ops, 5), dtype=tf.float32)
+        return (gate_types, numeric_params, labels)
 
     # Mock features_to_circuit within the py_function call context if possible,
     # or mock the py_function itself. Mocking py_function is simpler here.
     def mock_py_function(func, inp, Tout):
         # Simulate the py_function call returning a dummy circuit string
         # The actual func (features_to_circuit) won't be called.
+        # 'inp' will be the list of tensors returned by mock_preprocess_data_func:
+        # [gate_types_tensor, numeric_params_tensor, labels_tensor]
+        # We don't need to use 'inp' here as we just return a dummy value.
         return tf.constant("dummy_circuit_repr_string")
 
     monkeypatch.setattr(dataset_creator_module, 'decode_csv', mock_decode_csv_func)

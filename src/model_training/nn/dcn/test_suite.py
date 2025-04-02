@@ -1,7 +1,7 @@
 import os
 import tempfile
 import pytest # Import pytest
-# from unittest.mock import patch # No longer needed, use monkeypatch
+from unittest.mock import Mock # Import Mock
 import numpy as np
 import pandas as pd
 import tensorflow as tf # Still needed for dtypes if used in dummy data
@@ -65,16 +65,16 @@ def test_loss_function_calls(monkeypatch):
     Test that calculate_fidelity and create_circuit are called within the optimization loop.
     """
     # Use mocks to track calls
-    mock_fidelity = pytest.Mock(side_effect=dummy_calculate_fidelity_func)
-    mock_create = pytest.Mock(side_effect=dummy_create_circuit_func)
+    mock_fidelity = Mock(side_effect=dummy_calculate_fidelity_func) # Use Mock from unittest.mock
+    mock_create = Mock(side_effect=dummy_create_circuit_func) # Use Mock from unittest.mock
 
     # Patch the functions
     monkeypatch.setattr(cirq_circuit_optimizer, 'calculate_fidelity', mock_fidelity)
-    # Patch create_circuit where it's used by cirq_circuit_optimizer
-    monkeypatch.setattr("model_training.nn.utils.circuit_utils.create_circuit", mock_create)
+    # Patch create_circuit within the cirq_circuit_optimizer module's namespace
+    monkeypatch.setattr(cirq_circuit_optimizer, "create_circuit", mock_create)
 
     dummy_features = {
-        'dummy_feature1': np.array([0.0, 0.0], dtype='float32'),
+'dummy_feature1': np.array([0.0, 0.0], dtype='float32'),
         'dummy_feature2': np.array([0.0, 0.0], dtype='float32')
     }
     dummy_target = np.array([[0.0+0.0j], [0.0+0.0j]]) # Example complex target state array

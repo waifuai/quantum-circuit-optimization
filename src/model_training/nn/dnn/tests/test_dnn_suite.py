@@ -6,6 +6,7 @@ import numpy as np
 import pandas as pd
 import pytest
 import tensorflow as tf
+from unittest.mock import Mock # Import Mock
 # No longer need importlib
 # import importlib.util
 
@@ -99,12 +100,12 @@ def test_hybrid_optimizer_circuit_1s(monkeypatch, capsys, dummy_csv_1s):
     # Import the module
     import model_training.nn.dnn.s1.hybrid_dnn_cirq_optimizer as optimizer_1s
 
-    # Patch the create_circuit function it imports
-    mock_create_circuit = pytest.Mock(return_value="dummy_circuit_1s")
-    monkeypatch.setattr("model_training.nn.utils.circuit_utils.create_circuit", mock_create_circuit)
+    # Patch the create_circuit function *within the optimizer module*
+    mock_create_circuit = Mock(return_value="dummy_circuit_1s") # Use Mock
+    monkeypatch.setattr(optimizer_1s, "create_circuit", mock_create_circuit)
 
     # Patch the model's fit and predict methods to avoid actual training/prediction
-    mock_model_instance = pytest.Mock()
+    mock_model_instance = Mock() # Use Mock from unittest.mock
     # Simulate predict returning valid parameters (e.g., shape (1, 25))
     mock_model_instance.predict.return_value = np.random.rand(1, optimizer_1s.NUM_PARAMS)
     mock_model_instance.train.return_value = None # Mock train method used in script
@@ -154,12 +155,12 @@ def test_hybrid_optimizer_circuit_32s(monkeypatch, capsys, dummy_csv_32s):
      # Import the module
     import model_training.nn.dnn.s32.hybrid_dnn_cirq_optimizer_32s as optimizer_32s
 
-    # Patch the create_circuit function it imports
-    mock_create_circuit = pytest.Mock(return_value="dummy_circuit_32s")
-    monkeypatch.setattr("model_training.nn.utils.circuit_utils.create_circuit", mock_create_circuit)
+    # Patch the create_circuit function *within the optimizer module*
+    mock_create_circuit = Mock(return_value="dummy_circuit_32s") # Use Mock
+    monkeypatch.setattr(optimizer_32s, "create_circuit", mock_create_circuit)
 
     # Patch the model's fit and predict methods
-    mock_model_instance = pytest.Mock()
+    mock_model_instance = Mock() # Use Mock from unittest.mock
     mock_model_instance.predict.return_value = np.random.rand(1, optimizer_32s.NUM_PARAMS)
     mock_model_instance.train.return_value = None
 

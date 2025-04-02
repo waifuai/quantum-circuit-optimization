@@ -54,11 +54,19 @@ def create_circuit_dataset(file_paths):
     dataset = dataset.map(preprocess_data, num_parallel_calls=tf.data.AUTOTUNE)
 
     qubits = cirq.LineQubit.range(config.NUM_QUBITS)
-    def map_to_circuits(processed_gates, labels):
+    # Modify map_to_circuits to accept the 3 tensors from preprocess_data
+    def map_to_circuits(gate_types, numeric_params, labels):
+        # features_to_circuit expects a list of tuples/lists, not tensors directly.
+        # We need to adapt the input to features_to_circuit or adapt features_to_circuit.
+        # For now, let's assume features_to_circuit needs adaptation or we pass combined info.
+        # Let's pass the numeric_params tensor to py_function.
+        # Note: features_to_circuit might need adjustment to handle this tensor input.
         circuit = tf.py_function(
-            lambda g: features_to_circuit(g.numpy(), qubits),
-            inp=[processed_gates],
-            Tout=tf.string  # The circuit object
+            # Pass numeric_params tensor to the lambda
+            # Assuming features_to_circuit expects the numeric parameters (control, target, angles)
+            lambda np_params: features_to_circuit(np_params.numpy(), qubits), # Assuming features_to_circuit can handle this
+            inp=[numeric_params], # Pass the relevant tensor(s) needed by features_to_circuit
+            Tout=tf.string
         )
         return circuit, labels
 
