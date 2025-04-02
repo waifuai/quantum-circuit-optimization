@@ -6,4 +6,6 @@ apache-beam
 numpy
 deepctr
 cirq
-trax
+transformers
+datasets
+tokenizers

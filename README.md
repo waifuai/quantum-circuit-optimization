@@ -40,7 +40,7 @@ This directory contains the core of the project, where various machine learning 
 
 *   **Classical Deep Learning (TensorFlow):** Utilizes deep neural networks (DNNs) and Deep Crossing Networks (DCNs) for regression tasks and optimization.
 *   **Hybrid Classical-Quantum Optimization:** Combines DNNs with Cirq's optimization routines, where DNNs generate parameters for Cirq circuits.
-*   **Sequence-to-Sequence Modeling (Trax):** Employs a Transformer model to learn transformations that optimize circuits, treating them as sequences.
+*   **Sequence-to-Sequence Modeling (Hugging Face Transformers):** Employs a Transformer model (Encoder-Decoder architecture) to learn transformations that optimize circuits, treating them as sequences of tokens.
 
 **Subdirectories:**
 
@@ -50,22 +50,21 @@ This directory contains the core of the project, where various machine learning 
     *   **`ds_dnn/`:** Dataset creation and preprocessing for DNN training.
     *   **`norm_ds_dnn/`:** DNN training with normalized datasets.
     *   **`utils/`:** Utility functions for circuit manipulation and model building.
-*   **`prep/`:** Data preprocessing scripts for normalizing and converting CSV data to TFRecord format.
-*   **`trax-train/`:** Transformer model implementation using Trax for sequence-to-sequence circuit optimization.
-*   **`trax-transformer/`:** A simplified version of the Trax Transformer model.
+*   **`prep/`:** Data preprocessing scripts for normalizing and converting CSV data to TFRecord format (primarily for `nn` models).
+*   **`hf_transformer/`:** Transformer model implementation using Hugging Face Transformers for sequence-to-sequence circuit optimization. Contains scripts for building a custom tokenizer, preparing data, training, and prediction.
 
 **Models:**
 
 *   **Deep Crossing Network (DCN):** A classical deep learning model used for regression tasks related to circuit properties.
 *   **Deep Neural Networks (DNN):** DNNs are employed for optimizing 1-second and 32-second circuits, and in hybrid approaches that generate parameters for Cirq circuits.
-*   **Transformer:** A sequence-to-sequence model that learns to transform unoptimized circuits into more efficient versions.
+*   **Transformer (Hugging Face):** A sequence-to-sequence model built using the Hugging Face `transformers` library. It learns to transform unoptimized circuits into more efficient versions using a custom vocabulary and an Encoder-Decoder architecture.
 
 **Getting Started:**
 
 Each module within `model-training` has its own README file with detailed instructions. Generally, you will need to:
 
-1. **Prepare the data:** This might involve using `data-generation` to create datasets, downloading pre-existing datasets, or preprocessing CSV files from the `prep` directory.
-2. **Install dependencies:** Use `pip install -r requirements.txt` within the specific module's directory, or install individual packages as needed (e.g., `pip install cirq numpy pandas scikit-learn tensorflow`). Trax modules have their own `requirements.txt` files.
+1. **Prepare the data:** This might involve using `data-generation` to create datasets, downloading pre-existing datasets, preprocessing CSV files from the `prep` directory (for `nn` models), or preparing text files for the `hf_transformer` module.
+2. **Install dependencies:** Use `pip install -r requirements.txt` from the project root. This file includes dependencies for all modules, including `tensorflow`, `cirq`, `transformers`, `datasets`, and `tokenizers`.
 3. **Run the training scripts:** Each module provides scripts for training and evaluating its models.
 
 **Examples:**
@@ -76,11 +75,17 @@ Each module within `model-training` has its own README file with detailed instru
     ```
 *   Run a Hybrid DNN-Cirq Optimizer (for 1-second circuits):
     ```bash
-    python src/model-training/nn/dnn/1s/cirq_dnn_optimizer.py
+    python src/model-training/nn/dnn/1s/hybrid_dnn_cirq_optimizer.py
     ```
-*   Train a Trax Transformer model:
+*   Train the Hugging Face Transformer model (after preparing data and tokenizer):
     ```bash
-    python src/model-training/trax-train/src/train.py
+    # Assuming you are in the project root
+    # 1. Build tokenizer (if not already done)
+    python src/model_training/hf_transformer/cli.py tokenize --data_dir=src/model_training/hf_transformer/data --tokenizer_save_dir=src/model_training/hf_transformer/tokenizer
+    # 2. Prepare data (if not already done)
+    python src/model_training/hf_transformer/cli.py prep --input_file=src/model_training/hf_transformer/data/input.txt --processed_input_file=src/model_training/hf_transformer/data/input_processed.txt --processed_output_file=src/model_training/hf_transformer/data/output_processed.txt
+    # 3. Train
+    python src/model_training/hf_transformer/cli.py train --data_dir=src/model_training/hf_transformer/data --tokenizer_dir=src/model_training/hf_transformer/tokenizer --output_dir=src/model_training/hf_transformer/hf_transformer_results
     ```
 
 ## Getting Started with the Repository
@@ -89,18 +94,22 @@ Each module within `model-training` has its own README file with detailed instru
     ```bash
     git clone <repository_url>
     ```
-2. **Navigate to the directory of interest:**
+2. **Navigate to the project root directory:**
     ```bash
-    cd src/data-generation # To generate data
-    cd src/model-training/nn/dcn # To train a DCN model, as an example
+    cd quantum-circuit-optimization
     ```
 3. **Install dependencies:**
     ```bash
-    pip install -r requirements.txt # If a requirements.txt file is present
-    # Or, install packages individually
-    pip install cirq numpy pandas scikit-learn tensorflow
+    # Recommended: Create and activate a virtual environment first
+    # python -m venv .venv
+    # source .venv/bin/activate  # or .venv\Scripts\activate on Windows
+
+    # Install using uv (as per custom instructions)
+    python -m uv venv .venv # Create venv if not already done
+    # Activate: source .venv/Scripts/activate (or equivalent for your shell)
+    .venv/Scripts/python.exe -m uv pip install -r requirements.txt
     ```
-4. **Follow the instructions in the README files within each subdirectory.**
+4. **Follow the instructions in the README files within each subdirectory** (e.g., `src/model_training/hf_transformer/README.md` when it's created).
 
 ## Future Work
 
@@ -112,7 +121,7 @@ This project is an ongoing effort, and there are many potential directions for f
 *   Investigating more advanced optimization algorithms, such as reinforcement learning.
 *   Applying these techniques to larger and more complex quantum circuits.
 *   Utilizing quantum hardware for simulation and optimization to leverage the power of real quantum devices.
-*   Improving the Trax Transformer implementation for better performance and scalability.
+*   Improving the Hugging Face Transformer implementation (e.g., exploring different architectures, generation strategies, evaluation metrics like BLEU/ROUGE).
 *   Incorporating error mitigation techniques to improve the reliability of optimized circuits on noisy quantum hardware.
 *   Investigating reinforcement learning as a method for circuit optimization.
 
