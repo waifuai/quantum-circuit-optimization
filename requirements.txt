@@ -2,10 +2,10 @@ pandas
 scikit-learn
 tensorflow
 tensorflow-datasets
-apache-beam
+# apache-beam
 numpy
-deepctr
-cirq
+# deepctr
+cirq-core # Install only core cirq components
 transformers
-datasets
+# datasets
 tokenizers

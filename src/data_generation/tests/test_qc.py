@@ -119,7 +119,8 @@ def test_simulate_statevector():
     state_probs = simulate_statevector(circuit)
     # Sum of probabilities should be approximately 1.
     total_prob = sum(state_probs.values())
-    assert abs(total_prob - 1) < 1e-6
+    # Use pytest.approx for floating point comparison
+    assert total_prob == pytest.approx(1.0)
 
 # --- Tests for scripts/generate_dataset.py ---
 

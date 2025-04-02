@@ -1,226 +1,91 @@
 import os
 import tempfile
-import unittest
-from unittest.mock import patch
+import pytest # Import pytest
+# from unittest.mock import patch # No longer needed, use monkeypatch
 import numpy as np
 import pandas as pd
-import tensorflow as tf
+import tensorflow as tf # Still needed for dtypes if used in dummy data
 
 # -------------------------------
 # Tests for cirq_circuit_optimizer.py
 # -------------------------------
 from model_training.nn.dcn import cirq_circuit_optimizer
+# Import the specific functions to be mocked if they are not directly in cirq_circuit_optimizer
+# Assuming calculate_fidelity and create_circuit are imported by cirq_circuit_optimizer
+# from model_training.nn.utils.circuit_utils import create_circuit # Example if needed
 
-# Create dummy circuit and loss functions for testing
+# Create dummy circuit and helper functions for testing
 class DummyCircuit:
     pass
 
-def dummy_create_circuit(params):
-    # Return a dummy circuit object (could be more complex if needed)
+# These dummy functions can remain as helpers for the tests
+def dummy_create_circuit_func(params, num_qubits): # Match expected signature
+    """Dummy function to replace create_circuit."""
     return DummyCircuit()
 
-def dummy_calculate_fidelity(circuit, target_state):
+def dummy_calculate_fidelity_func(circuit, target_state):
+    """Dummy function to replace calculate_fidelity."""
     # Return a constant fidelity value (for testing)
     return 0.5
 
-# class TestCirqCircuitOptimizer(unittest.TestCase):
-# 
-# 
-# 
-#     @patch('model_training.nn.dcn.cirq_circuit_optimizer.calculate_fidelity', side_effect=dummy_calculate_fidelity)
-# 
-#     @patch('model_training.nn.dcn.cirq_circuit_optimizer.create_circuit', side_effect=dummy_create_circuit)
-# 
-#     def test_optimize_circuit_returns_array(self, mock_create, mock_fidelity):
-# 
-#         """
-# 
-#         Test that optimize_circuit returns a numpy array of parameters
-# 
-#         with the expected length (25 in this case).
-# 
-#         """
-# 
-#         # Create minimal dummy training data.
-# 
-#         dummy_features = {
-# 
-#             'dummy_feature1': np.array([0.0, 0.0], dtype='float32'),
-# 
-#             'dummy_feature2': np.array([0.0, 0.0], dtype='float32')
-# 
-#         }
-# 
-#         dummy_target = np.array([[0.0], [0.0]])
-# 
-#         optimized_params = cirq_circuit_optimizer.optimize_circuit(dummy_features, dummy_target)
-# 
-#         self.assertIsInstance(optimized_params, np.ndarray)
-# 
-#         self.assertEqual(optimized_params.shape, (25,))
-# 
-# 
-# 
-#     @patch('model_training.nn.dcn.cirq_circuit_optimizer.calculate_fidelity', side_effect=dummy_calculate_fidelity)
-# 
-#     @patch('model_training.nn.dcn.cirq_circuit_optimizer.create_circuit', side_effect=dummy_create_circuit)
-# 
-#     def test_loss_function_calls(self, mock_create, mock_fidelity):
-# 
-#         """
-# 
-#         Test that calculate_fidelity and create_circuit are called within the optimization loop.
-# 
-#         """
-# 
-#         dummy_features = {
-# 
-#             'dummy_feature1': np.array([0.0, 0.0], dtype='float32'),
-# 
-#             'dummy_feature2': np.array([0.0, 0.0], dtype='float32')
-# 
-#         }
-# 
-#         dummy_target = np.array([[0.0], [0.0]])
-# 
-#         _ = cirq_circuit_optimizer.optimize_circuit(dummy_features, dummy_target)
-# 
-#         # Check that calculate_fidelity is called at least once.
-# 
-#         self.assertTrue(mock_fidelity.called)
-# 
-#         mock_create.assert_called()
-# 
+# Refactored tests using pytest and monkeypatch
 
-# # -------------------------------
-# 
-# # Tests for legacy_cpu_dcn.py
-# 
-# # -------------------------------
-# 
-# from model_training.nn.dcn import legacy_cpu_dcn
-# 
-# from deepctr.inputs import DenseFeat
-# 
-# from tensorflow.keras.models import Model
-# 
-# 
-# 
-# class TestLegacyCpuDCN(unittest.TestCase):
-# 
-# 
-# 
-#     def test_load_and_prepare_data(self):
-# 
-#         """
-# 
-#         Create a temporary CSV file with the expected columns and verify that load_and_prepare_data
-# 
-#         returns inputs of the correct types and dimensions.
-# 
-#         """
-# 
-#         # Reconstruct the list of dense features as used in the module.
-# 
-#         dense_features = [
-# 
-#             f"gate_{str(i).zfill(2)}_{suffix}"
-# 
-#             for i in range(41)
-# 
-#             for suffix in ["Gate_Type", "Gate_Number", "Control", "Target", "Angle_1", "Angle_2", "Angle_3"]
-# 
-#         ]
-# 
-#         target = ['statevector_00000']
-# 
-#         # Create a DataFrame with a few rows (ensure number of rows is not less than batch_size).
-# 
-#         num_rows = 4
-# 
-#         data_dict = {col: np.random.rand(num_rows) for col in dense_features}
-# 
-#         data_dict[target[0]] = np.random.rand(num_rows)
-# 
-#         df = pd.DataFrame(data_dict)
-# 
-# 
-# 
-#         # Write DataFrame to a temporary CSV file.
-# 
-#         with tempfile.NamedTemporaryFile(mode='w', delete=False, suffix='.csv') as tmp:
-# 
-#             df.to_csv(tmp.name, index=False)
-# 
-#             tmp_path = tmp.name
-# 
-# 
-# 
-#         try:
-# 
-#             # For testing, use a small batch_size (e.g., 2) to force truncation.
-# 
-#             batch_size = 2
-# 
-#             train_ds, test_ds, feat_names = legacy_cpu_dcn.load_and_prepare_data(tmp_path, batch_size)
-# 
-#             # Verify that inputs are tf.data.Dataset objects
-# 
-#             self.assertIsInstance(train_ds, tf.data.Dataset)
-# 
-#             self.assertIsInstance(test_ds, tf.data.Dataset)
-# 
-# 
-# 
-#             # Verify that the datasets contain the correct features
-# 
-#             for features, labels in train_ds.take(1):
-# 
-#                 self.assertEqual(set(features.keys()), set(dense_features))
-# 
-#                 self.assertEqual(features[dense_features[0]].shape, (batch_size,))
-# 
-#                 self.assertEqual(labels.shape, (batch_size,))
-# 
-# 
-# 
-#         finally:
-# 
-#             os.remove(tmp_path)
-# 
-# 
-# 
-#     def test_build_dcn_model(self):
-# 
-#         """
-# 
-#         Test that build_dcn_model returns a model that is compiled with the expected optimizer and loss.
-# 
-#         """
-# 
-#         # Create a dummy feature column list.
-# 
-#         dummy_feats = ["dummy_feature"]
-# 
-#         num_circuit_params = 25
-# 
-#         model = legacy_cpu_dcn.build_dcn_model(dummy_feats, dummy_feats, num_circuit_params)
-# 
-#         # Check if the optimizer and loss are set as expected.
-# 
-#         self.assertEqual(model.optimizer._name, "adam")
-# 
-#         self.assertTrue(isinstance(model, Model))
-# 
-#         self.assertEqual(len(model.outputs), 2)  # Check for two outputs
-# 
-#         self.assertEqual(model.loss['dcn'], 'mse')
-# 
-#         self.assertEqual(model.get_layer('circuit_params').output_shape, (None, num_circuit_params))
-# 
-# 
-# 
-# if __name__ == '__main__':
-# 
-#     unittest.main()
-# 
+def test_optimize_circuit_returns_array(monkeypatch):
+    """
+    Test that optimize_circuit returns a numpy array of parameters
+    with the expected length (25 in this case).
+    """
+    # Patch the functions within the cirq_circuit_optimizer module
+    monkeypatch.setattr(cirq_circuit_optimizer, 'calculate_fidelity', dummy_calculate_fidelity_func)
+    # Assuming create_circuit is imported into cirq_circuit_optimizer from utils
+    # If it's defined locally, patch it directly:
+    # monkeypatch.setattr(cirq_circuit_optimizer, 'create_circuit', dummy_create_circuit_func)
+    # If it's imported like 'from model_training.nn.utils.circuit_utils import create_circuit':
+    monkeypatch.setattr("model_training.nn.utils.circuit_utils.create_circuit", dummy_create_circuit_func)
+
+
+    # Create minimal dummy training data.
+    # Note: The structure of train_features needs to match what optimize_circuit expects.
+    # The original script expects a dictionary where values are numpy arrays.
+    dummy_features = {
+        'dummy_feature1': np.array([0.0, 0.0], dtype='float32'),
+        'dummy_feature2': np.array([0.0, 0.0], dtype='float32')
+    }
+    # Target state needs to be compatible with calculate_fidelity (e.g., numpy array)
+    # The original script used train[target].values, which is likely a 2D array.
+    dummy_target = np.array([[0.0+0.0j], [0.0+0.0j]]) # Example complex target state array
+
+    optimized_params = cirq_circuit_optimizer.optimize_circuit(dummy_features, dummy_target)
+
+    assert isinstance(optimized_params, np.ndarray)
+    assert optimized_params.shape == (25,) # Default number of params
+
+def test_loss_function_calls(monkeypatch):
+    """
+    Test that calculate_fidelity and create_circuit are called within the optimization loop.
+    """
+    # Use mocks to track calls
+    mock_fidelity = pytest.Mock(side_effect=dummy_calculate_fidelity_func)
+    mock_create = pytest.Mock(side_effect=dummy_create_circuit_func)
+
+    # Patch the functions
+    monkeypatch.setattr(cirq_circuit_optimizer, 'calculate_fidelity', mock_fidelity)
+    # Patch create_circuit where it's used by cirq_circuit_optimizer
+    monkeypatch.setattr("model_training.nn.utils.circuit_utils.create_circuit", mock_create)
+
+    dummy_features = {
+        'dummy_feature1': np.array([0.0, 0.0], dtype='float32'),
+        'dummy_feature2': np.array([0.0, 0.0], dtype='float32')
+    }
+    dummy_target = np.array([[0.0+0.0j], [0.0+0.0j]]) # Example complex target state array
+
+    # Call the function under test
+    # The optimizer (scipy.minimize) will call the loss function multiple times.
+    _ = cirq_circuit_optimizer.optimize_circuit(dummy_features, dummy_target)
+
+    # Check that the mocked functions were called at least once by the optimizer.
+    assert mock_fidelity.called
+    assert mock_create.called
+
+# Removed tests for legacy_cpu_dcn.py
+# Removed if __name__ == '__main__': block
