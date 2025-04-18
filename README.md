@@ -16,7 +16,7 @@ This directory focuses on creating datasets of quantum circuits that can be used
 *   **Circuit Generation:** Generates random quantum circuits using the `Cirq` library.
 *   **Simulation:** Simulates circuits, optionally including noise models.
 *   **Optimization:** Applies basic optimization routines to generated circuits.
-*   **Dataset Creation:** Saves circuits and associated data in TFRecord format.
+*   **Dataset Creation:** Saves circuits and associated data in JSON Lines (`.jsonl`) format (one JSON object per line).
 
 **Getting Started:**
 
@@ -30,7 +30,7 @@ This directory focuses on creating datasets of quantum circuits that can be used
     ```bash
     python src/data-generation/scripts/generate_dataset.py
     ```
-    This creates a TFRecord file (`cirq_dataset.tfrecord`) containing 100 circuits by default. You can modify the script parameters to generate a different number of circuits or change the output file.
+    This creates a JSON Lines file (`cirq_dataset.jsonl`) containing 100 circuits by default. You can modify the script parameters to generate a different number of circuits or change the output file.
 
 ### `src/model-training`
 

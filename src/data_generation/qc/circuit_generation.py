@@ -60,15 +60,15 @@ def generate_random_circuit(
 @dataclass(frozen=True)
 class GateOperationData:
     """
-    A dataclass representing a Cirq gate operation.
+    A dataclass representing a Cirq gate operation, ready for JSON serialization.
 
     Attributes:
         gate_type: The name of the gate type.
-        qubits: A tuple of `cirq.Qid` objects representing the qubits the gate operates on.
+        qubits_repr: A tuple of strings representing the qubits the gate operates on.
         exponent: The exponent of the gate, if applicable.
     """
     gate_type: str
-    qubits: Tuple[cirq.Qid, ...]
+    qubits_repr: Tuple[str, ...]
     exponent: Optional[float] = None
 
 def gate_operation_to_data(op: cirq.Operation) -> GateOperationData:
@@ -81,31 +81,37 @@ def gate_operation_to_data(op: cirq.Operation) -> GateOperationData:
     Returns:
         A `GateOperationData` object representing the operation.
     """
-    gate_type: str = type(op.gate).__name__
-    qubits_repr: Tuple[str, ...] = tuple(str(q) for q in op.qubits) # Use string representation
+    gate_type: str
+    # Handle potential PauliString gate representation
+    if hasattr(op.gate, 'pauli_string'):
+        gate_type = f"PauliStringGate_{op.gate.pauli_string}"
+    else:
+        gate_type = type(op.gate).__name__
+    qubits_repr: Tuple[str, ...] = tuple(str(q) for q in op.qubits)
     exponent: Optional[float] = getattr(op.gate, 'exponent', None)
+    # Handle special cases where exponent might be non-numeric (like ParameterizedValue)
+    if not isinstance(exponent, (int, float)):
+        exponent = None
     return GateOperationData(gate_type=gate_type, qubits_repr=qubits_repr, exponent=exponent)
 
 def circuit_to_operations_data(circuit: cirq.Circuit) -> Tuple[List[GateOperationData], int]:
     """
-    Converts a Cirq circuit into a dictionary of its operations and counts the total number of gates.
+    Converts a Cirq circuit into a list of its operations data and counts the total number of gates (excluding measurements).
 
     Args:
         circuit: The `cirq.Circuit` to convert.
 
     Returns:
         A tuple containing:
-            - A dictionary where keys are gate identifiers (e.g., "gate_00") and values are dictionaries
-              representing the gate operations.
-            - The total number of gates in the circuit.
+            - A list of GateOperationData objects representing the gate operations.
+            - The total number of gates in the circuit (excluding measurements for this count).
     """
     operations_data: List[GateOperationData] = []
-    gate_number: int = 0
+    gate_count: int = 0
     for moment in circuit:
         for op in moment.operations:
-            # Exclude measurement gates from the count and data list if desired,
-            # but currently including them for a full operation list.
             op_data: GateOperationData = gate_operation_to_data(op)
             operations_data.append(op_data)
-            gate_number += 1
-    return operations_data, gate_number
+            if not isinstance(op.gate, cirq.MeasurementGate):
+                gate_count += 1 # Only count non-measurement gates towards 'num_gates'
+    return operations_data, gate_count
