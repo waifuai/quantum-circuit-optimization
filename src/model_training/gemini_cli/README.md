@@ -1,6 +1,6 @@
 # Gemini CLI for Quantum Circuit Optimization
 
-**Note:** The `hf_transformer` directory name is historical. This module now provides a command-line interface (CLI) for optimizing quantum circuits using the Google Gemini API (model: gemini-2.5-flash-preview-04-17) via in-context learning.
+**Note:** The `gemini_cli` directory name is historical. This module now provides a command-line interface (CLI) for optimizing quantum circuits using the Google Gemini API (model: gemini-2.5-flash-preview-04-17) via in-context learning.
 
 ---
 

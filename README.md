@@ -48,7 +48,7 @@ This directory contains the core of the project, where various machine learning 
     *   **`norm_ds_dnn/`:** DNN training with normalized datasets.
     *   **`utils/`:** Utility functions for circuit manipulation and model building.
 *   **`prep/`:** Data preprocessing scripts for normalizing and converting CSV data to TFRecord format (primarily for `nn` models).
-*   **`hf_transformer/`:** Google Gemini API CLI for circuit optimization. Contains scripts for optimizing circuits using the Gemini API.
+*   **`gemini_cli/`:** Google Gemini API CLI for circuit optimization. Contains scripts for optimizing circuits using the Gemini API.
 
 **Models:**
 
@@ -59,7 +59,7 @@ This directory contains the core of the project, where various machine learning 
 
 Each module within `model-training` has its own README file with detailed instructions. Generally, you will need to:
 
-1. **Prepare the data:** This might involve using `data-generation` to create datasets, downloading pre-existing datasets, preprocessing CSV files from the `prep` directory (for `nn` models), or preparing text files for the `hf_transformer` module.
+1. **Prepare the data:** This might involve using `data-generation` to create datasets, downloading pre-existing datasets, preprocessing CSV files from the `prep` directory (for `nn` models), or preparing text files for the `gemini_cli` module.
 2. **Install dependencies:** Use `pip install -r requirements.txt` from the project root. This file includes dependencies for all modules, including `tensorflow`, `cirq`, `transformers`, `datasets`, and `tokenizers`.
 3. **Run the training scripts:** Each module provides scripts for training and evaluating its models.
 
@@ -75,7 +75,7 @@ Each module within `model-training` has its own README file with detailed instru
     ```
 *   Optimize a circuit using Google Gemini API:
     ```bash
-    python src/model_training/hf_transformer/predict.py --input_circuit "H 0; CNOT 0 1; H 0"
+    python src/model_training/gemini_cli/predict.py --input_circuit "H 0; CNOT 0 1; H 0"
     ```
 
 ## Getting Started with the Repository
@@ -99,7 +99,7 @@ Each module within `model-training` has its own README file with detailed instru
     # Activate: source .venv/Scripts/activate (or equivalent for your shell)
     .venv/Scripts/python.exe -m uv pip install -r requirements.txt
     ```
-4. **Follow the instructions in the README files within each subdirectory** (e.g., `src/model_training/hf_transformer/README.md` when it's created).
+4. **Follow the instructions in the README files within each subdirectory** (e.g., `src/model_training/gemini_cli/README.md` when it's created).
 
 ## Future Work
 

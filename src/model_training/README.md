@@ -5,7 +5,7 @@ This module contains all code for optimizing quantum circuits using the Google G
 ## Contents
 
 - `gemini_optimizer.py`: Core function to call the Gemini API for circuit optimization.
-- `hf_transformer/predict.py`: Command-line interface for optimizing circuits with Gemini.
+- `gemini_cli/predict.py`: Command-line interface for optimizing circuits with Gemini.
 
 ## Setting Up
 
@@ -22,7 +22,7 @@ This module contains all code for optimizing quantum circuits using the Google G
 To optimize a quantum circuit using Gemini:
 
 ```bash
-python src/model_training/hf_transformer/predict.py --input_circuit "H 0; CNOT 0 1; H 0"
+python src/model_training/gemini_cli/predict.py --input_circuit "H 0; CNOT 0 1; H 0"
 ```
 
 The script will print the input and the optimized output returned by Gemini.
