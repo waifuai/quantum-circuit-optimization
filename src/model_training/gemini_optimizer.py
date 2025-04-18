@@ -3,7 +3,7 @@ import google.generativeai as genai
 
 def optimize_circuit_with_gemini(unoptimized_circuit_string: str, examples: list[tuple[str, str]]) -> str:
     """
-    Optimize the given quantum circuit string using Google Gemini API with in-context learning.
+    Optimize the given quantum circuit string using Google Gemini API (model: gemini-2.5-flash-preview-04-17) with in-context learning.
 
     Args:
         unoptimized_circuit_string: The circuit to optimize.
@@ -11,34 +11,34 @@ def optimize_circuit_with_gemini(unoptimized_circuit_string: str, examples: list
 
     Returns:
         The optimized circuit string returned by Gemini.
+
+    Notes:
+        - The Gemini API key is loaded exclusively from the file ~/.api-gemini. If the file is missing or unreadable, an error is raised.
+        - Uses the model 'gemini-2.5-flash-preview-04-17'.
     """
-    # Load API key from environment variable or ~/.api-gemini file
-    api_key = os.getenv("GEMINI_API_KEY")
-    if not api_key:
-        try:
-            with open(os.path.expanduser("~/.api-gemini"), "r") as f:
-                api_key = f.read().strip()
-        except Exception as e:
-            raise RuntimeError("GEMINI_API_KEY not set and unable to read from ~/.api-gemini") from e
-    # Configure the Gemini client
+    try:
+        with open(os.path.expanduser("~/.api-gemini"), "r") as f:
+            api_key = f.read().strip()
+    except Exception as e:
+        raise RuntimeError("Unable to read Gemini API key from ~/.api-gemini") from e
     genai.configure(api_key=api_key)
 
-    # Build the prompt
     prompt_lines = ["Optimize the following quantum circuits based on the provided examples:"]
     for inp, out in examples:
         prompt_lines.append(f"Unoptimized: {inp}")
         prompt_lines.append(f"Optimized: {out}")
-        prompt_lines.append("")  # blank line between examples
+        prompt_lines.append("")
     prompt_lines.append(f"Unoptimized: {unoptimized_circuit_string}")
     prompt_lines.append("Optimized:")
     prompt = "\n".join(prompt_lines)
 
-    # Call the Gemini API
     try:
-        response = genai.generate_text(model="gemini-pro", prompt=prompt)
+        model = genai.GenerativeModel("gemini-2.5-flash-preview-04-17")
+        response = model.generate_content(prompt)
         text = response.text
     except Exception as e:
         raise RuntimeError(f"Error calling Gemini API: {e}") from e
+    return text
 
     # Parse the optimized circuit from the response
     try:

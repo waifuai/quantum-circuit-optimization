@@ -1,6 +1,8 @@
 # src
 
-This repository contains code and resources for exploring quantum circuit optimization using both classical and quantum machine learning techniques. The project is organized into three main directories: `data-generation`, `model-training`, and `sql`.
+This directory contains the main source code for quantum circuit optimization. The codebase is now focused on two subdirectories:
+- `data-generation/`: Tools for generating datasets of random quantum circuits using Cirq.
+- `model-training/`: Code for optimizing quantum circuits using the Google Gemini API (gemini-2.5-flash-preview-04-17).
 
 ## `data-generation`
 

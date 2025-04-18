@@ -1,12 +1,5 @@
-pandas
-scikit-learn
 tensorflow
-tensorflow-datasets
-# apache-beam
 numpy
-# deepctr
-cirq-core # Install only core cirq components
-transformers
+cirq-core
 google-generativeai
-# datasets
-tokenizers
+tqdm

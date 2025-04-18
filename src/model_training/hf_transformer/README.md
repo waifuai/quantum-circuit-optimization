@@ -1,19 +1,18 @@
-# Quantum Circuit Optimization via Google Gemini (In-Context Learning)
+# Gemini CLI for Quantum Circuit Optimization
 
-This directory replaces the previous Hugging Face Transformer inference with a call to the Google Gemini API using *in-context learning*. Instead of loading a local model checkpoint, `predict.py` now constructs a prompt with example circuit pairs and streams it to Gemini for optimization.
+**Note:** The `hf_transformer` directory name is historical. This module now provides a command-line interface (CLI) for optimizing quantum circuits using the Google Gemini API (model: gemini-2.5-flash-preview-04-17) via in-context learning.
 
 ---
 
-## 1. Overview
+## Overview
 
-- **Before:** `predict.py` loaded a local `EncoderDecoderModel` and custom tokenizer, then ran beam search generation.
-- **Now:** `predict.py` calls `optimize_circuit_with_gemini` from `gemini_optimizer.py`, which:
-  1. Reads your Gemini API key.
-  2. Builds a prompt with user-defined examples and the new circuit.
-  3. Sends the prompt to the Gemini model.
-  4. Parses and returns the optimized circuit string.
+- `predict.py` uses `optimize_circuit_with_gemini` from `gemini_optimizer.py` to:
+  1. Read your Gemini API key from `~/.api-gemini`.
+  2. Build a prompt with example circuit pairs and your input circuit.
+  3. Send the prompt to Gemini.
+  4. Print the optimized circuit returned by Gemini.
 
-This approach leverages Google Gemini's large language capabilities without requiring a local fine-tuned model.
+No local models or tokenizers are used.
 
 ---
 

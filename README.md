@@ -1,14 +1,11 @@
 # Quantum Circuit Optimization
 
-This repository contains code and resources for exploring quantum circuit optimization using both classical and quantum machine learning techniques. The project aims to leverage the power of machine learning to discover more efficient quantum circuits for various tasks.
+This repository focuses on quantum circuit data generation (using Cirq) and circuit optimization using the Google Gemini API (model: gemini-2.5-flash-preview-04-17) via in-context learning. All classical neural network and local model code has been removed for simplicity and clarity.
 
 ## Project Structure
 
-The project is organized into three main directories:
-
-*   **`data-generation`**: Tools for generating datasets of random quantum circuits.
-*   **`model-training`**:  Code for training classical and quantum machine learning models for circuit optimization.
-*   **`sql`**: Historical SQL queries (no longer actively used) from an earlier, cloud-based phase of the project.
+- **data-generation/**: Tools for generating datasets of random quantum circuits using Cirq.
+- **model-training/**: Contains code for optimizing quantum circuits via the Google Gemini API.
 
 ### `data-generation`
 
@@ -40,7 +37,7 @@ This directory contains the core of the project, where various machine learning 
 
 *   **Classical Deep Learning (TensorFlow):** Utilizes deep neural networks (DNNs) and Deep Crossing Networks (DCNs) for regression tasks and optimization.
 *   **Hybrid Classical-Quantum Optimization:** Combines DNNs with Cirq's optimization routines, where DNNs generate parameters for Cirq circuits.
-*   **Sequence-to-Sequence Modeling (Hugging Face Transformers):** Employs a Transformer model (Encoder-Decoder architecture) to learn transformations that optimize circuits, treating them as sequences of tokens.
+*   **Gemini API Inference:** Uses Google Gemini API for circuit optimization via in-context learning.
 
 **Subdirectories:**
 
@@ -51,13 +48,12 @@ This directory contains the core of the project, where various machine learning 
     *   **`norm_ds_dnn/`:** DNN training with normalized datasets.
     *   **`utils/`:** Utility functions for circuit manipulation and model building.
 *   **`prep/`:** Data preprocessing scripts for normalizing and converting CSV data to TFRecord format (primarily for `nn` models).
-*   **`hf_transformer/`:** Transformer model implementation using Hugging Face Transformers for sequence-to-sequence circuit optimization. Contains scripts for building a custom tokenizer, preparing data, training, and prediction.
+*   **`hf_transformer/`:** Google Gemini API CLI for circuit optimization. Contains scripts for optimizing circuits using the Gemini API.
 
 **Models:**
 
 *   **Deep Crossing Network (DCN):** A classical deep learning model used for regression tasks related to circuit properties.
 *   **Deep Neural Networks (DNN):** DNNs are employed for optimizing 1-second and 32-second circuits, and in hybrid approaches that generate parameters for Cirq circuits.
-*   **Transformer (Hugging Face):** A sequence-to-sequence model built using the Hugging Face `transformers` library. It learns to transform unoptimized circuits into more efficient versions using a custom vocabulary and an Encoder-Decoder architecture.
 
 **Getting Started:**
 
@@ -77,15 +73,9 @@ Each module within `model-training` has its own README file with detailed instru
     ```bash
     python src/model-training/nn/dnn/1s/hybrid_dnn_cirq_optimizer.py
     ```
-*   Train the Hugging Face Transformer model (after preparing data and tokenizer):
+*   Optimize a circuit using Google Gemini API:
     ```bash
-    # Assuming you are in the project root
-    # 1. Build tokenizer (if not already done)
-    python src/model_training/hf_transformer/cli.py tokenize --data_dir=src/model_training/hf_transformer/data --tokenizer_save_dir=src/model_training/hf_transformer/tokenizer
-    # 2. Prepare data (if not already done)
-    python src/model_training/hf_transformer/cli.py prep --input_file=src/model_training/hf_transformer/data/input.txt --processed_input_file=src/model_training/hf_transformer/data/input_processed.txt --processed_output_file=src/model_training/hf_transformer/data/output_processed.txt
-    # 3. Train
-    python src/model_training/hf_transformer/cli.py train --data_dir=src/model_training/hf_transformer/data --tokenizer_dir=src/model_training/hf_transformer/tokenizer --output_dir=src/model_training/hf_transformer/hf_transformer_results
+    python src/model_training/hf_transformer/predict.py --input_circuit "H 0; CNOT 0 1; H 0"
     ```
 
 ## Getting Started with the Repository
@@ -121,7 +111,7 @@ This project is an ongoing effort, and there are many potential directions for f
 *   Investigating more advanced optimization algorithms, such as reinforcement learning.
 *   Applying these techniques to larger and more complex quantum circuits.
 *   Utilizing quantum hardware for simulation and optimization to leverage the power of real quantum devices.
-*   Improving the Hugging Face Transformer implementation (e.g., exploring different architectures, generation strategies, evaluation metrics like BLEU/ROUGE).
+*   Improving the Gemini API implementation (e.g., exploring different architectures, generation strategies, evaluation metrics like BLEU/ROUGE).
 *   Incorporating error mitigation techniques to improve the reliability of optimized circuits on noisy quantum hardware.
 *   Investigating reinforcement learning as a method for circuit optimization.
 
