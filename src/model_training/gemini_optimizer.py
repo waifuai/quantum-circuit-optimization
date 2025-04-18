@@ -39,11 +39,3 @@ def optimize_circuit_with_gemini(unoptimized_circuit_string: str, examples: list
     except Exception as e:
         raise RuntimeError(f"Error calling Gemini API: {e}") from e
     return text
-
-    # Parse the optimized circuit from the response
-    try:
-        optimized = text.split("Optimized:")[-1].strip()
-    except Exception as e:
-        raise RuntimeError(f"Error parsing Gemini response: {e}") from e
-
-    return optimized

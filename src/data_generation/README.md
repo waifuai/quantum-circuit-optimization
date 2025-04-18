@@ -1,6 +1,6 @@
 # Quantum Circuit Dataset Generator
 
-This package demonstrates generating random quantum circuits using Cirq, simulating them (with noise), and optimizing them.
+This package demonstrates generating random quantum circuits using Cirq, simulating them (with noise), optimizing them using basic Cirq routines, and saving the data.
 
 ## Directory Structure
 
@@ -9,26 +9,26 @@ This package demonstrates generating random quantum circuits using Cirq, simulat
   - `simulation.py` (simulation functions)
   - `optimization.py` (optimization routines)
 - **scripts/** – Contains main scripts:
-  - `generate_dataset.py` – Generates a dataset of circuits and saves it as a pickle file.
+  - `generate_dataset.py` – Generates a dataset of circuits and saves it as a TFRecord file.
 
 ## Usage
 
 From the project root, run:
 
 ```bash
-python scripts/generate_dataset.py
+python src/data-generation/scripts/generate_dataset.py
 ```
 
-This will generate 100 circuits (adjustable via the script) and save them to a pickle file.
+This will generate 100 circuits (adjustable via script arguments) and save them to `cirq_dataset.tfrecord`.
 
 ## Dependencies
 
 - Python 3.10+
 - Cirq
+- TensorFlow (only for TFRecord output)
 - tqdm
 
 Install dependencies via:
 
 ```bash
-pip install cirq tqdm
-```
+.venv/Scripts/python.exe -m uv pip install -r requirements.txt

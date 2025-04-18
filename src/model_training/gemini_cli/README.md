@@ -35,18 +35,12 @@ The `requirements.txt` should include:
 
 ## 3. Setting Up Your Gemini API Key
 
-`optimize_circuit_with_gemini` looks for your API key in two places:
-
-1. **Environment Variable:**
-   - Set `GEMINI_API_KEY` in your shell:
-     ```bash
-     export GEMINI_API_KEY="YOUR_API_KEY"
-     ```
-2. **Key File:**
+**Update:** The current implementation in `gemini_optimizer.py` *only* checks for the key file. The environment variable method is not used.
+- **Key File:**
    - Place your key in a plain text file at `~/.api-gemini` (one line).
-   - The code will read and strip whitespace.
+   - The code will read this file and strip whitespace. **This is the only method currently implemented.**
 
-If neither is found, the script raises an error.
+If the key file is not found, the script raises an error.
 
 ---
 
@@ -83,14 +77,12 @@ Gemini completes after the final `Optimized:` tag.
 ## 5. Usage
 
 ```powershell
-python predict.py --input_circuit "<circuit representation>"
+python src/model_training/gemini_cli/predict.py --input_circuit "<circuit representation>"
 ```
 
-> **Note:** The arguments `--model_dir` and `--tokenizer_dir` remain in the CLI but are no longer used for inference. You may leave them at default or pass dummy paths.
-
-Example:
+> Example:
 ```bash
-python predict.py --input_circuit "H 0; CNOT 0 1; H 0"
+python src/model_training/gemini_cli/predict.py --input_circuit "H 0 ; CNOT 0 1 ; H 0"
 ```
 
 The script prints the optimized circuit returned by Gemini.
@@ -100,9 +92,9 @@ The script prints the optimized circuit returned by Gemini.
 ## 6. Customization & Troubleshooting
 
 - **Change Examples:** Modify the `EXAMPLES` list in `predict.py` to include domain-specific pairs.
-- **Model Selection:** By default `gemini-pro` is used; to change, adjust the call in `gemini_optimizer.py`:
+- **Model Selection:** The model (`gemini-2.5-flash-preview-04-17`) is hardcoded in `gemini_optimizer.py`. To change it, modify the `GenerativeModel` instantiation:
   ```python
-  response = genai.generate_text(model="gemini-pro", prompt=prompt)
+  model = genai.GenerativeModel("your-desired-gemini-model")
   ```
 - **Error Handling:** API failures or parse errors raise `RuntimeError` with details.
 

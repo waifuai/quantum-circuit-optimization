@@ -1,4 +1,4 @@
-tensorflow
+tensorflow # Required only for TFRecord I/O in data_generation
 numpy
 cirq-core
 google-generativeai

@@ -1,11 +1,11 @@
 # model-training: Gemini API Quantum Circuit Optimization
 
-This module contains all code for optimizing quantum circuits using the Google Gemini API (model: gemini-2.5-flash-preview-04-17) via in-context learning. All classical neural network and local model code has been removed.
+This module contains all code for optimizing quantum circuits using the Google Gemini API (model: `gemini-2.5-flash-preview-04-17`) via in-context learning. All classical neural network and local model code has been removed.
 
 ## Contents
 
-- `gemini_optimizer.py`: Core function to call the Gemini API for circuit optimization.
-- `gemini_cli/predict.py`: Command-line interface for optimizing circuits with Gemini.
+- `gemini_cli/`: Command-line scripts for Gemini API-based optimization
+- `gemini_optimizer.py`: Core Gemini API interaction function
 
 ## Setting Up
 
@@ -29,7 +29,7 @@ The script will print the input and the optimized output returned by Gemini.
 
 ## Future Work
 
-- Advanced prompt engineering for Gemini
-- Automated evaluation and benchmarking of Gemini-optimized circuits
+- Advanced prompt engineering for Gemini.
+- Automated evaluation and benchmarking of Gemini-optimized circuits (e.g., comparing gate counts, depth, or simulation fidelity).
 - Reinforcement learning and feedback via the Gemini API
 - Large-scale dataset generation for Gemini prompt tuning

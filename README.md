@@ -1,13 +1,13 @@
 # Quantum Circuit Optimization
 
-This repository focuses on quantum circuit data generation (using Cirq) and circuit optimization using the Google Gemini API (model: gemini-2.5-flash-preview-04-17) via in-context learning. All classical neural network and local model code has been removed for simplicity and clarity.
+This repository focuses on quantum circuit data generation (using Cirq) and circuit optimization using the Google Gemini API (model: `gemini-2.5-flash-preview-04-17`) via in-context learning. All classical neural network and local model code has been removed for simplicity and clarity.
 
 ## Project Structure
 
 - **data-generation/**: Tools for generating datasets of random quantum circuits using Cirq.
 - **model-training/**: Contains code for optimizing quantum circuits via the Google Gemini API.
 
-### `data-generation`
+### `src/data-generation`
 
 This directory focuses on creating datasets of quantum circuits that can be used to train machine learning models.
 
@@ -16,66 +16,44 @@ This directory focuses on creating datasets of quantum circuits that can be used
 *   **Circuit Generation:** Generates random quantum circuits using the `Cirq` library.
 *   **Simulation:** Simulates circuits, optionally including noise models.
 *   **Optimization:** Applies basic optimization routines to generated circuits.
-*   **Dataset Creation:** Saves circuits and associated data in pickle format for use in training.
+*   **Dataset Creation:** Saves circuits and associated data in TFRecord format.
 
 **Getting Started:**
 
 1. Ensure you have Python 3.10+ installed.
 2. Install necessary dependencies:
     ```bash
-    pip install cirq tqdm
+    # From the project root, using uv (see main Getting Started below)
+    .venv/Scripts/python.exe -m uv pip install -r requirements.txt
     ```
 3. Run the dataset generation script from the project root:
     ```bash
     python src/data-generation/scripts/generate_dataset.py
     ```
-    This creates a pickle file containing 100 circuits by default. You can modify the script to generate a different number of circuits.
+    This creates a TFRecord file (`cirq_dataset.tfrecord`) containing 100 circuits by default. You can modify the script parameters to generate a different number of circuits or change the output file.
 
-### `model-training`
+### `src/model-training`
 
-This directory contains the core of the project, where various machine learning models are trained for quantum circuit optimization. It explores several approaches:
-
-*   **Classical Deep Learning (TensorFlow):** Utilizes deep neural networks (DNNs) and Deep Crossing Networks (DCNs) for regression tasks and optimization.
-*   **Hybrid Classical-Quantum Optimization:** Combines DNNs with Cirq's optimization routines, where DNNs generate parameters for Cirq circuits.
+This directory contains the core of the project, focusing on:
 *   **Gemini API Inference:** Uses Google Gemini API for circuit optimization via in-context learning.
 
 **Subdirectories:**
 
-*   **`nn/`:** Classical neural network models.
-    *   **`dcn/`:** Deep Crossing Network (DCN) implementation.
-    *   **`dnn/`:** Deep Neural Networks (DNN) for 1-second and 32-second circuit optimization, including hybrid DNN-Cirq optimizers.
-    *   **`ds_dnn/`:** Dataset creation and preprocessing for DNN training.
-    *   **`norm_ds_dnn/`:** DNN training with normalized datasets.
-    *   **`utils/`:** Utility functions for circuit manipulation and model building.
-*   **`prep/`:** Data preprocessing scripts for normalizing and converting CSV data to TFRecord format (primarily for `nn` models).
 *   **`gemini_cli/`:** Google Gemini API CLI for circuit optimization. Contains scripts for optimizing circuits using the Gemini API.
-
-**Models:**
-
-*   **Deep Crossing Network (DCN):** A classical deep learning model used for regression tasks related to circuit properties.
-*   **Deep Neural Networks (DNN):** DNNs are employed for optimizing 1-second and 32-second circuits, and in hybrid approaches that generate parameters for Cirq circuits.
 
 **Getting Started:**
 
-Each module within `model-training` has its own README file with detailed instructions. Generally, you will need to:
+The `src/model_training/gemini_cli/README.md` file has detailed instructions. Generally, you will need to:
 
-1. **Prepare the data:** This might involve using `data-generation` to create datasets, downloading pre-existing datasets, preprocessing CSV files from the `prep` directory (for `nn` models), or preparing text files for the `gemini_cli` module.
-2. **Install dependencies:** Use `pip install -r requirements.txt` from the project root. This file includes dependencies for all modules, including `tensorflow`, `cirq`, `transformers`, `datasets`, and `tokenizers`.
-3. **Run the training scripts:** Each module provides scripts for training and evaluating its models.
+1. **Set up your Gemini API key:** Place your API key in a file named `.api-gemini` in your home directory (`~/.api-gemini`).
+2. **Install dependencies:** Use `pip install -r requirements.txt` from the project root. This file includes dependencies for all modules, including `cirq`, `google-generativeai`, and `tqdm`.
+3. **Run the optimization script:** Provide your input circuit string to the `predict.py` script.
 
 **Examples:**
 
-*   Train a DCN model:
-    ```bash
-    python src/model-training/nn/dcn/legacy_cpu_dcn.py
-    ```
-*   Run a Hybrid DNN-Cirq Optimizer (for 1-second circuits):
-    ```bash
-    python src/model-training/nn/dnn/1s/hybrid_dnn_cirq_optimizer.py
-    ```
 *   Optimize a circuit using Google Gemini API:
     ```bash
-    python src/model_training/gemini_cli/predict.py --input_circuit "H 0; CNOT 0 1; H 0"
+    python src/model_training/gemini_cli/predict.py --input_circuit "H 0 ; CNOT 0 1 ; H 0"
     ```
 
 ## Getting Started with the Repository
@@ -103,16 +81,15 @@ Each module within `model-training` has its own README file with detailed instru
 
 ## Future Work
 
-This project is an ongoing effort, and there are many potential directions for future development, as outlined in `model-training/README.md`. Some key areas include:
+This project is an ongoing effort. Potential future directions related to the current scope include:
 
-*   Developing custom loss functions tailored for quantum circuit optimization.
-*   Exploring backpropagation through quantum circuits to enable more efficient gradient-based optimization.
-*   Experimenting with different model architectures and hyperparameter settings.
-*   Investigating more advanced optimization algorithms, such as reinforcement learning.
-*   Applying these techniques to larger and more complex quantum circuits.
-*   Utilizing quantum hardware for simulation and optimization to leverage the power of real quantum devices.
-*   Improving the Gemini API implementation (e.g., exploring different architectures, generation strategies, evaluation metrics like BLEU/ROUGE).
-*   Incorporating error mitigation techniques to improve the reliability of optimized circuits on noisy quantum hardware.
-*   Investigating reinforcement learning as a method for circuit optimization.
+*   **Data Generation:**
+    *   Generating larger and more complex quantum circuits.
+    *   Exploring different circuit structures and gate sets.
+*   **Gemini Optimization:**
+    *   Improving the Gemini API implementation (e.g., advanced prompt engineering, exploring different generation strategies, automated evaluation using metrics like gate count reduction or fidelity).
+    *   Investigating reinforcement learning approaches using the Gemini API for feedback.
+    *   Incorporating error mitigation awareness into the optimization prompts or process.
 
+This project provides a solid foundation for exploring the exciting intersection of classical and quantum machine learning for the purpose of quantum circuit optimization. It offers a starting point for researchers and developers interested in contributing to this rapidly evolving field.------------------------
 This project provides a solid foundation for exploring the exciting intersection of classical and quantum machine learning for the purpose of quantum circuit optimization. It offers a starting point for researchers and developers interested in contributing to this rapidly evolving field.

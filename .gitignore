@@ -2,4 +2,3 @@ __pycache__
 *.jsonl
 *.pkl
 test_logs
-# test_models
