@@ -12,8 +12,8 @@ from hypothesis import strategies as st
 
 from data_generation.qc.circuit_generation import (
     generate_random_circuit,
-    gate_operation_to_dict,
-    circuit_to_dict,
+    gate_operation_to_data,
+    circuit_to_operations_data,
     QuantumConfig,
     GateOperationData,
 )
@@ -41,36 +41,35 @@ def test_generate_random_circuit_hypothesis(n_gates):
     ]
     assert len(non_measurement_ops) >= n_gates, "Circuit should have at least as many gate operations as specified."
 
-def test_gate_operation_to_dict():
+def test_gate_operation_to_data():
+    """Tests converting a single gate operation to GateOperationData."""
     qubit = cirq.GridQubit(0, 0)
     op = cirq.X(qubit)
-    op_data: GateOperationData = gate_operation_to_dict(op)
-    # Verify that the dictionary contains the gate type and qubit info.
+    op_data: GateOperationData = gate_operation_to_data(op)
+    # Verify that the dataclass contains the gate type and qubit info as string
     assert isinstance(op_data, GateOperationData)
-    assert op_data.gate_type == "_PauliX" # Adjusted expectation
-    assert op_data.qubits == (qubit,)
-    # Check the generated dictionary representation item by item
-    expected_dict = {'gate_type': '_PauliX', 'qubits': (qubit,), 'exponent': 1.0} # X gate has exponent 1.0
-    assert op_data.gate_type == expected_dict['gate_type']
-    assert op_data.qubits == expected_dict['qubits']
-    assert op_data.exponent == expected_dict['exponent'] # Check against corrected expected_dict
-    # If the gate has an exponent attribute, verify that it is captured in the dict.
-    if hasattr(op.gate, 'exponent'):
-         assert op_data.exponent == op.gate.exponent # Keep this check too
-         assert op_data.__dict__['exponent'] == op.gate.exponent
+    assert op_data.gate_type == "_PauliX" # Cirq internal name for X gate type
+    assert op_data.qubits_repr == (str(qubit),) # Check string representation
+    assert op_data.exponent == 1.0 # X gate has exponent 1.0
 
-def test_circuit_to_dict():
+    # Test a gate with no explicit exponent attribute (should be None)
+    op_measure = cirq.measure(qubit, key='m')
+    op_data_measure = gate_operation_to_data(op_measure)
+    assert op_data_measure.gate_type == "MeasurementGate"
+    assert op_data_measure.exponent is None
+
+def test_circuit_to_operations_data():
     qubits = [cirq.GridQubit(0, i) for i in range(QuantumConfig.N_QUBITS)]
     # Build a circuit: one gate per qubit followed by a measurement.
     ops = [cirq.X(q) for q in qubits] + [cirq.measure(*qubits, key='result')]
     circuit = cirq.Circuit(ops)
-    gates_dict, num_gates = circuit_to_dict(circuit)
+    operations_data, num_gates = circuit_to_operations_data(circuit)
     # The total number of gate operations should equal the number in the circuit.
     assert num_gates == len(list(circuit.all_operations()))
     # Each gate should have a key of the form "gate_XX".
     i = 0
-    for key, gate_data in gates_dict.items():
-        assert key == f"gate_{i:02}"
+    for op_data in operations_data:
+        assert isinstance(op_data, GateOperationData)
         i += 1
 
 # --- Tests for qc/optimization.py ---

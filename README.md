@@ -23,7 +23,7 @@ This directory focuses on creating datasets of quantum circuits that can be used
 1. Ensure you have Python 3.10+ installed.
 2. Install necessary dependencies:
     ```bash
-    # From the project root, using uv (see main Getting Started below)
+    # From the project root, after activating the virtual environment (see main Getting Started below)
     .venv/Scripts/python.exe -m uv pip install -r requirements.txt
     ```
 3. Run the dataset generation script from the project root:
@@ -68,14 +68,14 @@ The `src/model_training/gemini_cli/README.md` file has detailed instructions. Ge
     ```
 3. **Install dependencies:**
     ```bash
-    # Recommended: Create and activate a virtual environment first
-    # python -m venv .venv
-    # source .venv/bin/activate  # or .venv\Scripts\activate on Windows
+    python -m venv .venv
+    # Activate the environment
+    # On Linux/macOS:
+    # source .venv/bin/activate
+    # On Windows (Command Prompt/PowerShell):
+    # .venv\Scripts\activate
 
-    # Install using uv (as per custom instructions)
-    python -m uv venv .venv # Create venv if not already done
-    # Activate: source .venv/Scripts/activate (or equivalent for your shell)
-    .venv/Scripts/python.exe -m uv pip install -r requirements.txt
+    python -m pip install -r requirements.txt 
     ```
 4. **Follow the instructions in the README files within each subdirectory** (e.g., `src/model_training/gemini_cli/README.md` when it's created).
 
@@ -90,6 +90,3 @@ This project is an ongoing effort. Potential future directions related to the cu
     *   Improving the Gemini API implementation (e.g., advanced prompt engineering, exploring different generation strategies, automated evaluation using metrics like gate count reduction or fidelity).
     *   Investigating reinforcement learning approaches using the Gemini API for feedback.
     *   Incorporating error mitigation awareness into the optimization prompts or process.
-
-This project provides a solid foundation for exploring the exciting intersection of classical and quantum machine learning for the purpose of quantum circuit optimization. It offers a starting point for researchers and developers interested in contributing to this rapidly evolving field.------------------------
-This project provides a solid foundation for exploring the exciting intersection of classical and quantum machine learning for the purpose of quantum circuit optimization. It offers a starting point for researchers and developers interested in contributing to this rapidly evolving field.

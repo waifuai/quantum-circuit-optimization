@@ -44,15 +44,15 @@ def generate_random_circuit(
         if gate.num_qubits() == 1:
             qubit: cirq.Qid = random.choice(qubits)
             circuit.append(gate(qubit))
-        elif gate.num_qubits() == 2:
+        elif gate.num_qubits() == 2 and len(qubits) >= 2:
             # Choose two distinct qubits for the two-qubit gate
             q1: cirq.Qid
             q2: cirq.Qid
             q1, q2 = random.sample(qubits, 2)
             circuit.append(gate(q1, q2))
         else:
-            raise ValueError(f"Gate {gate} has an unsupported number of qubits: {gate.num_qubits()}")
-    
+            raise ValueError(f"Unsupported gate with {gate.num_qubits()} qubits or not enough qubits.")
+
     # Append a measurement for all qubits.
     circuit.append(cirq.measure(*qubits, key='result'))
     return circuit
@@ -71,7 +71,7 @@ class GateOperationData:
     qubits: Tuple[cirq.Qid, ...]
     exponent: Optional[float] = None
 
-def gate_operation_to_dict(op: cirq.Operation) -> GateOperationData:
+def gate_operation_to_data(op: cirq.Operation) -> GateOperationData:
     """
     Converts a Cirq gate operation to a GateOperationData dataclass.
 
@@ -82,11 +82,11 @@ def gate_operation_to_dict(op: cirq.Operation) -> GateOperationData:
         A `GateOperationData` object representing the operation.
     """
     gate_type: str = type(op.gate).__name__
-    qubits: Tuple[cirq.Qid, ...] = tuple(op.qubits)
+    qubits_repr: Tuple[str, ...] = tuple(str(q) for q in op.qubits) # Use string representation
     exponent: Optional[float] = getattr(op.gate, 'exponent', None)
-    return GateOperationData(gate_type=gate_type, qubits=qubits, exponent=exponent)
+    return GateOperationData(gate_type=gate_type, qubits_repr=qubits_repr, exponent=exponent)
 
-def circuit_to_dict(circuit: cirq.Circuit) -> Tuple[Dict[str, Any], int]:
+def circuit_to_operations_data(circuit: cirq.Circuit) -> Tuple[List[GateOperationData], int]:
     """
     Converts a Cirq circuit into a dictionary of its operations and counts the total number of gates.
 
@@ -99,11 +99,13 @@ def circuit_to_dict(circuit: cirq.Circuit) -> Tuple[Dict[str, Any], int]:
               representing the gate operations.
             - The total number of gates in the circuit.
     """
-    gates_dict: Dict[str, Any] = {}
+    operations_data: List[GateOperationData] = []
     gate_number: int = 0
     for moment in circuit:
         for op in moment.operations:
-            op_data: GateOperationData = gate_operation_to_dict(op)
-            gates_dict[f"gate_{gate_number:02}"] = op_data.__dict__
+            # Exclude measurement gates from the count and data list if desired,
+            # but currently including them for a full operation list.
+            op_data: GateOperationData = gate_operation_to_data(op)
+            operations_data.append(op_data)
             gate_number += 1
-    return gates_dict, gate_number
+    return operations_data, gate_number

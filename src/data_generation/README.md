@@ -5,7 +5,7 @@ This package demonstrates generating random quantum circuits using Cirq, simulat
 ## Directory Structure
 
 - **qc/** – Contains modules:
-  - `circuit_generation.py` (circuit creation and conversion to dictionary)
+  - `circuit_generation.py` (circuit creation and representation extraction)
   - `simulation.py` (simulation functions)
   - `optimization.py` (optimization routines)
 - **scripts/** – Contains main scripts:
@@ -31,4 +31,4 @@ This will generate 100 circuits (adjustable via script arguments) and save them 
 Install dependencies via:
 
 ```bash
-.venv/Scripts/python.exe -m uv pip install -r requirements.txt
+python -m pip install -r requirements.txt # Or use uv: python -m uv pip install -r requirements.txt

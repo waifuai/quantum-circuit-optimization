@@ -12,7 +12,7 @@ project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..
 sys.path.insert(0, project_root)
 
 from typing import List, Dict, Any
-from data_generation.qc.circuit_generation import generate_random_circuit, circuit_to_dict, QuantumConfig
+from data_generation.qc.circuit_generation import generate_random_circuit, circuit_to_operations_data, QuantumConfig, GateOperationData
 from data_generation.qc.simulation import simulate_with_noise
 from data_generation.qc.optimization import optimize_circuit
 
@@ -32,9 +32,7 @@ def generate_qc_dict(qubits: List[cirq.Qid], n_gates: int) -> Dict[str, Any]:
     # Generate a random circuit
     qc: cirq.Circuit = generate_random_circuit(qubits, n_gates)
     # Convert the circuit to a dictionary representation
-    gates_dict: Dict[str, Any]
-    num_gates: int
-    gates_dict, num_gates = circuit_to_dict(qc)
+    operations_data: List[GateOperationData] = circuit_to_operations_data(qc)
     # Simulate the circuit with noise
     simulation_counts: Dict[int, int] = simulate_with_noise(qc)
     # Optimize the circuit
@@ -42,8 +40,7 @@ def generate_qc_dict(qubits: List[cirq.Qid], n_gates: int) -> Dict[str, Any]:
 
     qc_dict: Dict[str, Any] = {
         "raw_circuit": str(qc),
-        "gates": list(gates_dict.values()),  # Values are already dicts from circuit_to_dict
-        "num_gates": num_gates,
+        "operations": operations_data,  
         "simulation_counts": str(simulation_counts), # Serialize the dict to string
         "optimized_circuit": str(optimized)
     }

@@ -21,11 +21,11 @@ No local models or tokenizers are used.
 Ensure you have installed all required libraries, including the Gemini SDK:
 
 ```powershell
-# Use uv inside your virtual environment
-python -m uv pip install -r requirements.txt
+# From the project root, inside your virtual environment
+python -m pip install -r requirements.txt # Or use uv: python -m uv pip install -r requirements.txt
 ```
 
-The `requirements.txt` should include:
+The main `requirements.txt` includes:
 - cirq-core
 - transformers
 - google-generativeai
@@ -92,10 +92,14 @@ The script prints the optimized circuit returned by Gemini.
 ## 6. Customization & Troubleshooting
 
 - **Change Examples:** Modify the `EXAMPLES` list in `predict.py` to include domain-specific pairs.
-- **Model Selection:** The model (`gemini-2.5-flash-preview-04-17`) is hardcoded in `gemini_optimizer.py`. To change it, modify the `GenerativeModel` instantiation:
+- **Model Selection:** The model (`gemini-2.5-flash-preview-04-17`) is defined as a constant `GEMINI_MODEL_NAME` in `gemini_optimizer.py`. To change it, modify this constant:
   ```python
-  model = genai.GenerativeModel("your-desired-gemini-model")
+  # In gemini_optimizer.py
+  GEMINI_MODEL_NAME = "your-desired-gemini-model"
+  model = genai.GenerativeModel(GEMINI_MODEL_NAME)
   ```
 - **Error Handling:** API failures or parse errors raise `RuntimeError` with details.
 
 Refer to `gemini_optimizer.py` for implementation details.
+
+**Note:** Run all commands from the project root directory.

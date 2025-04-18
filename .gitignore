@@ -2,3 +2,4 @@ __pycache__
 *.jsonl
 *.pkl
 test_logs
+.venv/
