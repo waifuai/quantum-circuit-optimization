@@ -7,5 +7,6 @@ numpy
 # deepctr
 cirq-core # Install only core cirq components
 transformers
+google-generativeai
 # datasets
 tokenizers

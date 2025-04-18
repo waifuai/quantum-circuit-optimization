@@ -1,5 +1,5 @@
 import argparse
-from pathlib import Path
+from pathlib import Path as _Path
 import sys
 import torch # Often needed for device placement
 
@@ -17,6 +17,14 @@ except ImportError:
     MAX_LENGTH = 256
     print(f"Warning: Using fallback MAX_LENGTH={MAX_LENGTH}", file=sys.stderr)
 
+sys.path.append(str(_Path(__file__).parent.parent.resolve()))
+from gemini_optimizer import optimize_circuit_with_gemini
+
+# In-context examples for Gemini API (replace with domain-specific examples)
+EXAMPLES = [
+    ("H 0; CNOT 0 1; H 0", "CNOT 0 1"),
+    ("X 0; X 0; Y 1", "Y 1"),
+]
 
 def load_model_and_tokenizer(model_dir: Path, tokenizer_dir: Path) -> tuple[EncoderDecoderModel, PreTrainedTokenizerFast]:
     """Loads the trained model and tokenizer."""
@@ -98,11 +106,11 @@ def predict_sequence(
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Predict using HF Transformer for Quantum Circuit Optimization")
     parser.add_argument(
-        "--model_dir", type=Path, required=True,
+        "--model_dir", type=_Path, required=True,
         help="Directory containing the saved trained model (output from train.py)."
     )
     parser.add_argument(
-        "--tokenizer_dir", type=Path, default=Path("./tokenizer"),
+        "--tokenizer_dir", type=_Path, default=_Path("./tokenizer"),
         help="Directory containing the saved custom tokenizer."
     )
     parser.add_argument(
@@ -121,17 +129,8 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     try:
-        # 1. Load Model and Tokenizer
-        model, tokenizer = load_model_and_tokenizer(args.model_dir, args.tokenizer_dir)
-
-        # 2. Predict
-        optimized_circuit = predict_sequence(
-            model,
-            tokenizer,
-            args.input_circuit,
-            max_length=args.max_length,
-            num_beams=args.num_beams
-        )
+        # Optimize circuit using Google Gemini API
+        optimized_circuit = optimize_circuit_with_gemini(args.input_circuit, EXAMPLES)
 
         # 3. Print result
         print("\n--- Prediction Result ---")
