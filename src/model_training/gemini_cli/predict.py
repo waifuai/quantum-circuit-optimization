@@ -12,7 +12,7 @@ EXAMPLES = [
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
-        description="Optimize a quantum circuit using Google Gemini API (gemini-2.5-pro-preview-03-25) via in-context learning."
+        description="Optimize a quantum circuit using Google Gemini API (gemini-2.5-pro-preview-05-06) via in-context learning."
     )
     parser.add_argument(
         "--input_circuit", type=str, required=True,

@@ -3,7 +3,7 @@ import google.generativeai as genai
 
 def optimize_circuit_with_gemini(unoptimized_circuit_string: str, examples: list[tuple[str, str]]) -> str:
     """
-    Optimize the given quantum circuit string using Google Gemini API (model: gemini-2.5-pro-preview-03-25) with in-context learning.
+    Optimize the given quantum circuit string using Google Gemini API (model: gemini-2.5-pro-preview-05-06) with in-context learning.
 
     Args:
         unoptimized_circuit_string: The circuit to optimize.
@@ -14,7 +14,7 @@ def optimize_circuit_with_gemini(unoptimized_circuit_string: str, examples: list
 
     Notes:
         - The Gemini API key is loaded exclusively from the file ~/.api-gemini. If the file is missing or unreadable, an error is raised.
-        - Uses the model 'gemini-2.5-pro-preview-03-25'.
+        - Uses the model 'gemini-2.5-pro-preview-05-06'.
     """
     try:
         with open(os.path.expanduser("~/.api-gemini"), "r") as f:
@@ -33,7 +33,7 @@ def optimize_circuit_with_gemini(unoptimized_circuit_string: str, examples: list
     prompt = "\n".join(prompt_lines)
 
     try:
-        model = genai.GenerativeModel("gemini-2.5-pro-preview-03-25")
+        model = genai.GenerativeModel("gemini-2.5-pro-preview-05-06")
         response = model.generate_content(prompt)
         text = response.text
     except Exception as e:

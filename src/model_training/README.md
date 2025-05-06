@@ -1,6 +1,6 @@
 # model-training: Gemini API Quantum Circuit Optimization
 
-This module contains all code for optimizing quantum circuits using the Google Gemini API (model: `gemini-2.5-pro-preview-03-25`) via in-context learning. All classical neural network and local model code has been removed.
+This module contains all code for optimizing quantum circuits using the Google Gemini API (model: `gemini-2.5-pro-preview-05-06`) via in-context learning. All classical neural network and local model code has been removed.
 
 ## Contents
 
