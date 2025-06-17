@@ -1,6 +1,6 @@
 # Gemini CLI for Quantum Circuit Optimization
 
-**Note:** The `gemini_cli` directory name is historical. This module now provides a command-line interface (CLI) for optimizing quantum circuits using the Google Gemini API (model: gemini-2.5-pro-preview-05-06) via in-context learning.
+**Note:** The `gemini_cli` directory name is historical. This module now provides a command-line interface (CLI) for optimizing quantum circuits using the Google Gemini API (model: gemini-2.5-pro) via in-context learning.
 
 ---
 
@@ -92,7 +92,7 @@ The script prints the optimized circuit returned by Gemini.
 ## 6. Customization & Troubleshooting
 
 - **Change Examples:** Modify the `EXAMPLES` list in `predict.py` to include domain-specific pairs.
-- **Model Selection:** The model (`gemini-2.5-pro-preview-05-06`) is defined as a constant `GEMINI_MODEL_NAME` in `gemini_optimizer.py`. To change it, modify this constant:
+- **Model Selection:** The model (`gemini-2.5-pro`) is defined as a constant `GEMINI_MODEL_NAME` in `gemini_optimizer.py`. To change it, modify this constant:
   ```python
   # In gemini_optimizer.py
   GEMINI_MODEL_NAME = "your-desired-gemini-model"

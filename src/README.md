@@ -2,7 +2,7 @@
 
 This directory contains the main source code for quantum circuit optimization. The codebase is now focused on two subdirectories:
 - `data-generation/`: Tools for generating datasets of random quantum circuits using Cirq.
-- `model-training/`: Code for optimizing quantum circuits using the Google Gemini API (`gemini-2.5-pro-preview-05-06`).
+- `model-training/`: Code for optimizing quantum circuits using the Google Gemini API (`gemini-2.5-pro`).
 
 ## `data-generation`
 
