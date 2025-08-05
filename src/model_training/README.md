@@ -1,17 +1,17 @@
 # model-training: Gemini API Quantum Circuit Optimization
 
-This module contains all code for optimizing quantum circuits using the Google Gemini API (model: `gemini-2.5-pro`) via in-context learning. All classical neural network and local model code has been removed.
+This module contains all code for optimizing quantum circuits using the Google GenAI SDK (model: `gemini-2.5-pro`) via in-context learning. All classical neural network and local model code has been removed.
 
 ## Contents
 
 - `gemini_cli/`: Command-line scripts for Gemini API-based optimization
-- `gemini_optimizer.py`: Core Gemini API interaction function
+- `gemini_optimizer.py`: Core Google GenAI SDK interaction function
 
 ## Setting Up
 
 1. **Install dependencies** (from the repo root):
    ```bash
-   python -m uv pip install -r requirements.txt
+   .venv/Scripts/python.exe -m uv pip install -r requirements.txt
    ```
 
 2. **Set up your Gemini API key:**

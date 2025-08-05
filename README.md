@@ -1,6 +1,6 @@
 # Quantum Circuit Optimization
 
-This repository focuses on quantum circuit data generation (using Cirq) and circuit optimization using the Google Gemini API (model: `gemini-2.5-pro`) via in-context learning. All classical neural network and local model code has been removed for simplicity and clarity.
+This repository focuses on quantum circuit data generation (using Cirq) and circuit optimization using the Google GenAI SDK (model: `gemini-2.5-pro`) via in-context learning. All classical neural network and local model code has been removed for simplicity and clarity.
 
 ## Project Structure
 
@@ -86,7 +86,7 @@ This project is an ongoing effort. Potential future directions related to the cu
 *   **Data Generation:**
     *   Generating larger and more complex quantum circuits.
     *   Exploring different circuit structures and gate sets.
-*   **Gemini Optimization:**
-    *   Improving the Gemini API implementation (e.g., advanced prompt engineering, exploring different generation strategies, automated evaluation using metrics like gate count reduction or fidelity).
+*   **Gemini Optimization (Google GenAI SDK):**
+    *   Improving the prompt engineering and generation strategies; automated evaluation using metrics like gate count reduction or fidelity.
     *   Investigating reinforcement learning approaches using the Gemini API for feedback.
     *   Incorporating error mitigation awareness into the optimization prompts or process.

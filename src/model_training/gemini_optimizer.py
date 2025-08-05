@@ -1,9 +1,21 @@
 import os
-import google.generativeai as genai
+from typing import List, Tuple
+from google import genai
 
-def optimize_circuit_with_gemini(unoptimized_circuit_string: str, examples: list[tuple[str, str]]) -> str:
+GEMINI_MODEL_NAME = "gemini-2.5-pro"
+
+def _load_api_key_from_file() -> str:
+    key_path = os.path.expanduser("~/.api-gemini")
+    with open(key_path, "r") as f:
+        return f.read().strip()
+
+def optimize_circuit_with_gemini(unoptimized_circuit_string: str, examples: List[Tuple[str, str]]) -> str:
     """
-    Optimize the given quantum circuit string using Google Gemini API (model: gemini-2.5-pro) with in-context learning.
+    Optimize the given quantum circuit string using Google GenAI SDK (model: gemini-2.5-pro) with in-context learning.
+
+    Auth:
+      - If GEMINI_API_KEY/GOOGLE_API_KEY env var is set, the client will use it automatically.
+      - Otherwise, if ~/.api-gemini exists, it will be read and passed explicitly to the client.
 
     Args:
         unoptimized_circuit_string: The circuit to optimize.
@@ -11,17 +23,23 @@ def optimize_circuit_with_gemini(unoptimized_circuit_string: str, examples: list
 
     Returns:
         The optimized circuit string returned by Gemini.
-
-    Notes:
-        - The Gemini API key is loaded exclusively from the file ~/.api-gemini. If the file is missing or unreadable, an error is raised.
-        - Uses the model 'gemini-2.5-pro'.
     """
+    # Prefer environment variable; fallback to key file if present.
+    api_key = os.environ.get("GEMINI_API_KEY") or os.environ.get("GOOGLE_API_KEY")
+    client = None
     try:
-        with open(os.path.expanduser("~/.api-gemini"), "r") as f:
-            api_key = f.read().strip()
+        if api_key:
+            client = genai.Client(api_key=api_key)
+        else:
+            # Fall back to ~/.api-gemini if present
+            try:
+                api_key = _load_api_key_from_file()
+                client = genai.Client(api_key=api_key)
+            except Exception:
+                # As a last resort, try default which may pick up env in some environments.
+                client = genai.Client()
     except Exception as e:
-        raise RuntimeError("Unable to read Gemini API key from ~/.api-gemini") from e
-    genai.configure(api_key=api_key)
+        raise RuntimeError(f"Failed to initialize GenAI client: {e}") from e
 
     prompt_lines = ["Optimize the following quantum circuits based on the provided examples:"]
     for inp, out in examples:
@@ -33,9 +51,10 @@ def optimize_circuit_with_gemini(unoptimized_circuit_string: str, examples: list
     prompt = "\n".join(prompt_lines)
 
     try:
-        model = genai.GenerativeModel("gemini-2.5-pro")
-        response = model.generate_content(prompt)
-        text = response.text
+        response = client.models.generate_content(
+            model=GEMINI_MODEL_NAME,
+            contents=prompt
+        )
+        return response.text
     except Exception as e:
         raise RuntimeError(f"Error calling Gemini API: {e}") from e
-    return text

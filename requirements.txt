@@ -13,27 +13,14 @@ pandas==2.3.1
 # Quantum library
 cirq-core==1.6.0
 
-# Google Gemini client and dependencies
-google-generativeai==0.8.5
-google-api-python-client==2.177.0
-google-api-core==2.25.1
-google-auth==2.40.3
-google-auth-httplib2==0.2.0
-google-ai-generativelanguage==0.6.15
-grpcio==1.74.0
-grpcio-status==1.71.2
-protobuf==5.29.5
-proto-plus==1.26.1
-googleapis-common-protos==1.70.0
-uritemplate==4.2.0
-httplib2==0.22.0
+# Google GenAI SDK (new)
+google-genai==1.28.0
+# HTTP stack (kept)
 requests==2.32.4
 urllib3==2.5.0
 idna==3.10
 certifi==2025.8.3
-rsa==4.9.1
-pyasn1==0.6.1
-pyasn1-modules==0.4.2
+# Removed legacy google-generativeai and older generativelanguage/grpc/protobuf stacks no longer required by google-genai
 
 # Utilities
 tqdm==4.67.1

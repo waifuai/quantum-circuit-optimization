@@ -1,6 +1,6 @@
 # Gemini CLI for Quantum Circuit Optimization
 
-**Note:** The `gemini_cli` directory name is historical. This module now provides a command-line interface (CLI) for optimizing quantum circuits using the Google Gemini API (model: gemini-2.5-pro) via in-context learning.
+**Note:** The `gemini_cli` directory name is historical. This module now provides a command-line interface (CLI) for optimizing quantum circuits using the Google GenAI SDK (model: gemini-2.5-pro) via in-context learning.
 
 ---
 
@@ -18,27 +18,25 @@ No local models or tokenizers are used.
 
 ## 2. Dependencies
 
-Ensure you have installed all required libraries, including the Gemini SDK:
+Ensure you have installed all required libraries, including the Google GenAI SDK:
 
-```powershell
+```bash
 # From the project root, inside your virtual environment
-python -m pip install -r requirements.txt # Or use uv: python -m uv pip install -r requirements.txt
+.venv/Scripts/python.exe -m uv pip install -r requirements.txt
 ```
 
 The main `requirements.txt` includes:
 - cirq-core
-- transformers
-- google-generativeai
+- google-genai
 - (other existing dependencies…)
 
 ---
 
 ## 3. Setting Up Your Gemini API Key
 
-**Update:** The current implementation in `gemini_optimizer.py` *only* checks for the key file. The environment variable method is not used.
-- **Key File:**
-   - Place your key in a plain text file at `~/.api-gemini` (one line).
-   - The code will read this file and strip whitespace. **This is the only method currently implemented.**
+Auth:
+- Preferred: set GEMINI_API_KEY or GOOGLE_API_KEY in the environment. The Google GenAI client will use it automatically.
+- Fallback: place your key in a plain text file at `~/.api-gemini` (one line). The CLI will read this file if no env var is set.
 
 If the key file is not found, the script raises an error.
 
