@@ -2,7 +2,7 @@
 
 This directory contains the main source code for quantum circuit optimization. The codebase is now focused on two subdirectories:
 - `data-generation/`: Tools for generating datasets of random quantum circuits using Cirq.
-- `model-training/`: Code for optimizing quantum circuits using the Google Gemini API (`gemini-2.5-pro`).
+- `model-training/`: Code for optimizing quantum circuits using the Google GenAI SDK (`gemini-2.5-pro`).
 
 ## `data-generation`
 
@@ -34,16 +34,16 @@ This will create a TFRecord file (`cirq_dataset.tfrecord`) containing 100 circui
 
 ## `model-training`
 
-This directory focuses on optimizing quantum circuits using the Google Gemini API via in-context learning.
+This directory focuses on optimizing quantum circuits using the Google GenAI SDK via in-context learning.
 
 **Subdirectories:**
 
-*   **`gemini_cli/`:** Contains a command-line script (`predict.py`) to send circuits to the Gemini API for optimization.
-*   **`gemini_optimizer.py`:** Provides the core function (`optimize_circuit_with_gemini`) that handles API interaction.
+*   **`gemini_cli/`:** Contains a command-line script (`predict.py`) to send circuits to the Gemini model via the GenAI SDK for optimization.
+*   **`gemini_optimizer.py`:** Provides the core function (`optimize_circuit_with_gemini`) that handles API interaction using `genai.Client`.
 
 **Dependencies:**
-
-*   `google-generativeai`
+ 
+*   `google-genai` (pinned to 1.28.0 in the root requirements)
 *   (See main project `requirements.txt`)
 
 **Usage:**
@@ -70,12 +70,13 @@ python src/model_training/gemini_cli/predict.py --input_circuit "H 0 ; CNOT 0 1 
     cd src/model-training  # For Gemini API optimization
     ```
 
-3. **Install dependencies:**
-
+3. **Install dependencies (uv venv):**
+ 
     ```bash
-    pip install -r requirements.txt  # If a requirements.txt file is present
-    # Or, install individual packages as needed
-    pip install cirq google-generativeai
+    python -m uv venv .venv
+    .venv/Scripts/python.exe -m ensurepip
+    .venv/Scripts/python.exe -m pip install uv
+    .venv/Scripts/python.exe -m uv pip install -r requirements.txt
     ```
 
 4. **Follow the instructions in the README files within each subdirectory.**
