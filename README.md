@@ -46,7 +46,7 @@ This directory contains the core of the project, focusing on:
 The `src/model_training/gemini_cli/README.md` file has detailed instructions. Generally, you will need to:
 
 1. **Set up your Gemini API key:** Place your API key in a file named `.api-gemini` in your home directory (`~/.api-gemini`).
-2. **Install dependencies:** Use `pip install -r requirements.txt` from the project root. This file includes dependencies for all modules, including `cirq`, `google-generativeai`, and `tqdm`.
+2. **Install dependencies:** Use `pip install -r requirements.txt` from the project root. This file includes dependencies for all modules, including `cirq`, `google-genai`, and `tqdm`.
 3. **Run the optimization script:** Provide your input circuit string to the `predict.py` script.
 
 **Examples:**
