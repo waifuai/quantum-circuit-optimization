@@ -1,6 +1,6 @@
 # Quantum Circuit Optimization
 
-This repository focuses on quantum circuit data generation (using Cirq) and circuit optimization using the Google GenAI SDK (model: `gemini-2.5-pro`) via in-context learning. All classical neural network and local model code has been removed for simplicity and clarity.
+This repository focuses on quantum circuit data generation (using Cirq) and circuit optimization using LLM providers. The default provider is OpenRouter with model `openrouter/horizon-beta`. Google GenAI (Gemini) remains supported.
 
 ## Project Structure
 
@@ -35,26 +35,32 @@ This directory focuses on creating datasets of quantum circuits that can be used
 ### `src/model-training`
 
 This directory contains the core of the project, focusing on:
-*   **Gemini API Inference:** Uses Google Gemini API for circuit optimization via in-context learning.
+*   **LLM API Inference:** Uses OpenRouter (default) or Google Gemini for circuit optimization via in-context learning.
 
 **Subdirectories:**
 
 *   **`gemini_cli/`:** Google Gemini API CLI for circuit optimization. Contains scripts for optimizing circuits using the Gemini API.
 
-**Getting Started:**
+**Getting Started (Unified CLI):**
 
-The `src/model_training/gemini_cli/README.md` file has detailed instructions. Generally, you will need to:
-
-1. **Set up your Gemini API key:** Place your API key in a file named `.api-gemini` in your home directory (`~/.api-gemini`).
-2. **Install dependencies:** Use `pip install -r requirements.txt` from the project root. This file includes dependencies for all modules, including `cirq`, `google-genai`, and `tqdm`.
-3. **Run the optimization script:** Provide your input circuit string to the `predict.py` script.
-
-**Examples:**
-
-*   Optimize a circuit using Google Gemini API:
-    ```bash
-    python src/model_training/gemini_cli/predict.py --input_circuit "H 0 ; CNOT 0 1 ; H 0"
-    ```
+1. Credentials:
+   - OpenRouter: set OPENROUTER_API_KEY or put key in `~/.api-openrouter`
+   - Gemini: set GEMINI_API_KEY or GOOGLE_API_KEY, or put key in `~/.api-gemini`
+2. Model selection:
+   - OpenRouter model file: `~/.model-openrouter` (first non-empty line); fallback `openrouter/horizon-beta`
+   - Gemini model file: `~/.model-gemini` (first non-empty line); fallback `gemini-2.5-pro`
+3. Install dependencies:
+   ```bash
+   .venv/Scripts/python.exe -m uv venv .venv ; .venv/Scripts/python.exe -m ensurepip ; .venv/Scripts/python.exe -m pip install uv ; .venv/Scripts/python.exe -m uv pip install -r requirements.txt
+   ```
+4. Run the unified CLI (default provider: openrouter):
+   ```bash
+   python -m src.model_training.cli.predict --input_circuit "H 0 ; CNOT 0 1 ; H 0"
+   ```
+   Use Gemini explicitly:
+   ```bash
+   python -m src.model_training.cli.predict --provider gemini --input_circuit "H 0 ; CNOT 0 1 ; H 0"
+   ```
 
 ## Getting Started with the Repository
 

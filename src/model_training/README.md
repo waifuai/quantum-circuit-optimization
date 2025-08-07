@@ -1,35 +1,48 @@
-# model-training: Gemini API Quantum Circuit Optimization
+# model-training: LLM-based Quantum Circuit Optimization
 
-This module contains all code for optimizing quantum circuits using the Google GenAI SDK (model: `gemini-2.5-pro`) via in-context learning. All classical neural network and local model code has been removed.
+This module contains code for optimizing quantum circuits using:
+- OpenRouter (default) with model `openrouter/horizon-beta`
+- Google GenAI (Gemini) with model `gemini-2.5-pro`
 
 ## Contents
 
-- `gemini_cli/`: Command-line scripts for Gemini API-based optimization
+- `cli/predict.py`: Unified CLI for provider-agnostic optimization (default provider: openrouter)
+- `gemini_cli/`: Deprecated historical CLI for Gemini (kept for compatibility)
 - `gemini_optimizer.py`: Core Google GenAI SDK interaction function
 
 ## Setting Up
 
 1. **Install dependencies** (from the repo root):
    ```bash
-   .venv/Scripts/python.exe -m uv pip install -r requirements.txt
+   .venv/Scripts/python.exe -m uv venv .venv ; .venv/Scripts/python.exe -m ensurepip ; .venv/Scripts/python.exe -m pip install uv ; .venv/Scripts/python.exe -m uv pip install -r requirements.txt
    ```
 
-2. **Set up your Gemini API key:**
-   - Place your API key in a file at `~/.api-gemini` (one line, no extra whitespace).
+2. **Credentials:**
+   - OpenRouter: set `OPENROUTER_API_KEY` or create `~/.api-openrouter` with the API key as a single line.
+   - Gemini: set `GEMINI_API_KEY` or `GOOGLE_API_KEY` or create `~/.api-gemini` with the API key as a single line.
 
-## Usage
+## Usage (Unified CLI)
 
-To optimize a quantum circuit using Gemini:
+To optimize a quantum circuit (default provider: OpenRouter):
 
 ```bash
-python src/model_training/gemini_cli/predict.py --input_circuit "H 0; CNOT 0 1; H 0"
+python -m src.model_training.cli.predict --input_circuit "H 0 ; CNOT 0 1 ; H 0"
 ```
 
-The script will print the input and the optimized output returned by Gemini.
+Use Gemini explicitly:
+
+```bash
+python -m src.model_training.cli.predict --provider gemini --input_circuit "H 0 ; CNOT 0 1 ; H 0"
+```
+
+### Model selection via dotfiles
+
+- OpenRouter: `~/.model-openrouter` (first non-empty line), fallback `openrouter/horizon-beta`
+- Gemini: `~/.model-gemini` (first non-empty line), fallback `gemini-2.5-pro`
 
 ## Future Work
 
-- Advanced prompt engineering for Gemini.
-- Automated evaluation and benchmarking of Gemini-optimized circuits (e.g., comparing gate counts, depth, or simulation fidelity).
-- Reinforcement learning and feedback via the Gemini API
-- Large-scale dataset generation for Gemini prompt tuning
+- Advanced prompt engineering for both providers.
+- Automated evaluation and benchmarking across providers.
+- Optional retries/backoff and rate-limit handling for OpenRouter.
+- Larger in-context example management.
