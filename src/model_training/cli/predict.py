@@ -1,3 +1,12 @@
+"""
+Quantum circuit optimization command-line interface.
+
+This module provides a unified command-line interface for optimizing quantum circuits
+using various AI providers including OpenRouter and Google Gemini. It supports
+in-context learning with custom examples, multiple model configurations, and
+comprehensive logging for debugging and monitoring optimization performance.
+"""
+
 import argparse
 from typing import List, Tuple, Optional
 import os

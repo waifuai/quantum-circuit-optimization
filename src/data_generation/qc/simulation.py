@@ -1,3 +1,12 @@
+"""
+Quantum circuit simulation module.
+
+This module provides functionality for simulating quantum circuits with and without noise
+using Cirq's simulation capabilities. It supports various noise models and provides
+utilities for extracting measurement results and statevector probabilities from
+simulated quantum circuits.
+"""
+
 import cirq
 import numpy as np
 import logging

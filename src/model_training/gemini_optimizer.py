@@ -1,3 +1,13 @@
+"""
+Google Gemini quantum circuit optimization module.
+
+This module provides integration with Google Gemini AI for quantum circuit optimization
+using in-context learning. It handles API authentication, prompt construction with
+examples, and response processing to generate optimized quantum circuit representations.
+The module supports configurable models and comprehensive error handling for robust
+API interactions.
+"""
+
 import os
 import logging
 from typing import List, Tuple, Optional

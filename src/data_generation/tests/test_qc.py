@@ -1,3 +1,12 @@
+"""
+Test suite for quantum computing core functionality.
+
+This module contains comprehensive tests for quantum circuit generation, simulation,
+and optimization functionality. It includes unit tests using pytest and hypothesis
+for property-based testing to ensure the reliability and correctness of the
+quantum circuit data generation pipeline.
+"""
+
 # tests/test_qc.py
 
 import random

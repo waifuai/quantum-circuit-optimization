@@ -1,3 +1,12 @@
+"""
+Quantum circuit optimization module.
+
+This module provides functionality for optimizing quantum circuits using Cirq's
+built-in optimization routines. It supports various target gatesets and provides
+a unified interface for circuit optimization within the quantum circuit generation
+and optimization pipeline.
+"""
+
 import cirq
 from typing import List, Optional
 

@@ -1,3 +1,13 @@
+"""
+Quantum circuit dataset generation script.
+
+This script provides the main functionality for generating datasets of random quantum
+circuits using Cirq. It creates circuits with configurable parameters, simulates them
+with optional noise, optimizes them, and saves the results in JSON Lines format.
+The script supports various configuration options for circuit generation and can be
+run from the command line with customizable parameters.
+"""
+
 #!/usr/bin/env python
 # scripts/generate_dataset.py
 import random
