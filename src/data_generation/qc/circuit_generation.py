@@ -2,16 +2,17 @@ import random
 import cirq
 from typing import List, Tuple, Dict, Any, Sequence, Optional
 from dataclasses import dataclass
+from typing import Final
 
 class QuantumConfig:
     """
     Configuration parameters for quantum circuit generation.
     """
-    N_QUBITS = 5
-    MIN_GATES = 1
-    MAX_GATES = 5
-    DEFAULT_NOISE = 0.01
-    INVALID_INDEX = -42
+    N_QUBITS: Final[int] = 5
+    MIN_GATES: Final[int] = 1
+    MAX_GATES: Final[int] = 5
+    DEFAULT_NOISE: Final[float] = 0.01
+    INVALID_INDEX: Final[int] = -42
 
 def generate_random_circuit(
     qubits: List[cirq.Qid],

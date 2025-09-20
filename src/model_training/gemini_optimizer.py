@@ -1,30 +1,13 @@
 import os
+import logging
 from typing import List, Tuple, Optional
 from google import genai
-from pathlib import Path
+from src.model_training.config import resolve_gemini_model, resolve_gemini_api_key
 
-# Default fallback if no ~/.model-gemini present
-_DEFAULT_GEMINI_MODEL = "gemini-2.5-pro"
-_MODEL_FILE = Path.home() / ".model-gemini"
+# Configure logger
+logger = logging.getLogger(__name__)
 
-def _resolve_gemini_model() -> str:
-    """
-    Resolve model name from ~/.model-gemini (first non-empty line), else fallback.
-    """
-    try:
-        if _MODEL_FILE.is_file():
-            for line in _MODEL_FILE.read_text(encoding="utf-8").splitlines():
-                val = line.strip()
-                if val:
-                    return val
-    except Exception:
-        pass
-    return _DEFAULT_GEMINI_MODEL
-
-def _load_api_key_from_file() -> str:
-    key_path = os.path.expanduser("~/.api-gemini")
-    with open(key_path, "r") as f:
-        return f.read().strip()
+# Configuration functions are now imported from config module
 
 def optimize_circuit_with_gemini(unoptimized_circuit_string: str, examples: List[Tuple[str, str]], model: Optional[str] = None) -> str:
     """
@@ -41,26 +24,36 @@ def optimize_circuit_with_gemini(unoptimized_circuit_string: str, examples: List
 
     Returns:
         The optimized circuit string returned by Gemini.
-    """
-    resolved_model = model or _resolve_gemini_model()
 
-    # Prefer environment variable; fallback to key file if present.
-    api_key = os.environ.get("GEMINI_API_KEY") or os.environ.get("GOOGLE_API_KEY")
+    Raises:
+        RuntimeError: If the API call fails or authentication is not properly configured.
+        ValueError: If the input parameters are invalid.
+    """
+    if not unoptimized_circuit_string or not unoptimized_circuit_string.strip():
+        raise ValueError("Input circuit string cannot be empty")
+    if not examples:
+        raise ValueError("Examples list cannot be empty")
+
+    resolved_model = model or resolve_gemini_model()
+    logger.info(f"Using Gemini model: {resolved_model}")
+    logger.debug(f"Optimizing circuit: {unoptimized_circuit_string}")
+    logger.debug(f"Using {len(examples)} examples for in-context learning")
+
+    # Get API key using centralized configuration
+    api_key = resolve_gemini_api_key()
     client = None
+
     try:
         if api_key:
+            logger.debug("Using API key from configuration")
             client = genai.Client(api_key=api_key)
         else:
-            # Fall back to ~/.api-gemini if present
-            try:
-                api_key = _load_api_key_from_file()
-                client = genai.Client(api_key=api_key)
-            except Exception:
-                # As a last resort, try default which may pick up env in some environments.
-                client = genai.Client()
+            logger.debug("No API key found, trying default client (may use environment)")
+            client = genai.Client()
     except Exception as e:
         raise RuntimeError(f"Failed to initialize GenAI client: {e}") from e
 
+    # Build prompt with examples
     prompt_lines = ["Optimize the following quantum circuits based on the provided examples:"]
     for inp, out in examples:
         prompt_lines.append(f"Unoptimized: {inp}")
@@ -70,11 +63,22 @@ def optimize_circuit_with_gemini(unoptimized_circuit_string: str, examples: List
     prompt_lines.append("Optimized:")
     prompt = "\n".join(prompt_lines)
 
+    logger.debug(f"Generated prompt with {len(prompt_lines)} lines")
+
     try:
+        logger.info("Calling Gemini API...")
         response = client.models.generate_content(
             model=resolved_model,
             contents=prompt
         )
-        return response.text
+
+        if not response.text or not response.text.strip():
+            raise RuntimeError("Gemini API returned empty response")
+
+        logger.info("Successfully received optimized circuit from Gemini")
+        return response.text.strip()
+
+    except AttributeError as e:
+        raise RuntimeError(f"Invalid response structure from Gemini API: {e}") from e
     except Exception as e:
         raise RuntimeError(f"Error calling Gemini API: {e}") from e
