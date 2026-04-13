@@ -13,14 +13,12 @@ pandas==2.3.1
 # Quantum library
 cirq-core==1.6.0
 
-# Google GenAI SDK (new)
-google-genai==1.28.0
-# HTTP stack (kept)
+# HTTP stack
 requests==2.32.4
 urllib3==2.5.0
 idna==3.10
 certifi==2025.8.3
-# Removed legacy google-generativeai and older generativelanguage/grpc/protobuf stacks no longer required by google-genai
+
 
 # Utilities
 tqdm==4.67.1

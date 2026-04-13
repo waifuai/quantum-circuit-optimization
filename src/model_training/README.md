@@ -46,7 +46,7 @@ This module provides AI-powered quantum circuit optimization using large languag
 ### Model Selection
 Configure default models using dotfiles:
 
-- `~/.model-openrouter`: OpenRouter model name (fallback: `deepseek/deepseek-chat-v3-0324:free`)
+- `~/.model-openrouter`: OpenRouter model name (fallback: `openrouter/free`)
 - `~/.model-gemini`: Gemini model name (fallback: `gemini-2.5-pro`)
 
 ### API Keys

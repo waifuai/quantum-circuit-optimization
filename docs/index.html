@@ -1,0 +1,803 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quantum Circuit Optimization — Documentation</title>
+    <style>
+        :root {
+            --bg: #0d1117;
+            --surface: #161b22;
+            --border: #30363d;
+            --text: #e6edf3;
+            --text-muted: #8b949e;
+            --accent: #58a6ff;
+            --accent-dim: #1f6feb;
+            --green: #3fb950;
+            --orange: #d29922;
+            --red: #f85149;
+            --purple: #bc8cff;
+            --code-bg: #1c2128;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.6;
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* Sidebar */
+        nav.sidebar {
+            width: 280px;
+            min-width: 280px;
+            background: var(--surface);
+            border-right: 1px solid var(--border);
+            padding: 24px 0;
+            position: fixed;
+            top: 0;
+            left: 0;
+            bottom: 0;
+            overflow-y: auto;
+            z-index: 10;
+        }
+
+        nav.sidebar .logo {
+            padding: 0 20px 20px;
+            border-bottom: 1px solid var(--border);
+            margin-bottom: 16px;
+        }
+
+        nav.sidebar .logo h1 {
+            font-size: 1.1em;
+            color: var(--accent);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        nav.sidebar .logo h1 span { font-size: 1.3em; }
+
+        nav.sidebar .logo p {
+            font-size: 0.78em;
+            color: var(--text-muted);
+            margin-top: 4px;
+        }
+
+        nav.sidebar ul {
+            list-style: none;
+            padding: 0 12px;
+        }
+
+        nav.sidebar ul li { margin: 2px 0; }
+
+        nav.sidebar ul li a {
+            display: block;
+            padding: 6px 12px;
+            color: var(--text-muted);
+            text-decoration: none;
+            font-size: 0.88em;
+            border-radius: 6px;
+            transition: all 0.15s;
+        }
+
+        nav.sidebar ul li a:hover {
+            background: rgba(88,166,255,0.08);
+            color: var(--text);
+        }
+
+        nav.sidebar ul li a.active {
+            background: rgba(88,166,255,0.12);
+            color: var(--accent);
+        }
+
+        nav.sidebar ul li.section-title {
+            font-size: 0.72em;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: var(--text-muted);
+            padding: 16px 12px 6px;
+        }
+
+        nav.sidebar .badge {
+            display: inline-block;
+            font-size: 0.7em;
+            padding: 1px 6px;
+            border-radius: 10px;
+            background: var(--accent-dim);
+            color: #fff;
+            margin-left: 6px;
+            vertical-align: middle;
+        }
+
+        /* Main content */
+        main {
+            margin-left: 280px;
+            flex: 1;
+            max-width: 900px;
+            padding: 40px 48px 80px;
+        }
+
+        section {
+            margin-bottom: 56px;
+            scroll-margin-top: 20px;
+        }
+
+        h2 {
+            font-size: 1.6em;
+            color: var(--text);
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 8px;
+            margin-bottom: 20px;
+        }
+
+        h3 {
+            font-size: 1.2em;
+            color: var(--accent);
+            margin: 28px 0 12px;
+        }
+
+        h4 {
+            font-size: 1.05em;
+            color: var(--text);
+            margin: 20px 0 8px;
+        }
+
+        p { margin: 10px 0; color: var(--text); }
+
+        a { color: var(--accent); text-decoration: none; }
+        a:hover { text-decoration: underline; }
+
+        code {
+            font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+            background: var(--code-bg);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 0.88em;
+            color: var(--orange);
+        }
+
+        pre {
+            background: var(--code-bg);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 16px 20px;
+            overflow-x: auto;
+            margin: 12px 0 16px;
+        }
+
+        pre code {
+            background: none;
+            padding: 0;
+            color: var(--text);
+            font-size: 0.85em;
+            line-height: 1.5;
+        }
+
+        .feature-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+            margin: 20px 0;
+        }
+
+        .feature-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 20px;
+        }
+
+        .feature-card h4 {
+            margin: 0 0 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .feature-card p {
+            font-size: 0.9em;
+            color: var(--text-muted);
+            margin: 0;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 16px 0;
+            font-size: 0.9em;
+        }
+
+        th, td {
+            text-align: left;
+            padding: 10px 14px;
+            border: 1px solid var(--border);
+        }
+
+        th {
+            background: var(--surface);
+            color: var(--accent);
+            font-weight: 600;
+        }
+
+        td { color: var(--text); }
+
+        .tree {
+            font-family: 'SFMono-Regular', Consolas, monospace;
+            font-size: 0.85em;
+            line-height: 1.6;
+            color: var(--text-muted);
+        }
+
+        .tree .dir { color: var(--accent); font-weight: 600; }
+        .tree .file { color: var(--text); }
+        .tree .comment { color: var(--text-muted); font-style: italic; }
+
+        .tip, .warn {
+            border-radius: 8px;
+            padding: 14px 18px;
+            margin: 16px 0;
+            font-size: 0.9em;
+        }
+
+        .tip {
+            background: rgba(63,185,80,0.08);
+            border-left: 3px solid var(--green);
+        }
+
+        .warn {
+            background: rgba(248,81,73,0.08);
+            border-left: 3px solid var(--red);
+        }
+
+        .tag {
+            display: inline-block;
+            font-size: 0.75em;
+            padding: 2px 8px;
+            border-radius: 10px;
+            margin-right: 4px;
+        }
+
+        .tag-python { background: #3572A5; color: #fff; }
+        .tag-quantum { background: #6e40c9; color: #fff; }
+        .tag-ai { background: #d29922; color: #fff; }
+
+        @media (max-width: 768px) {
+            nav.sidebar { display: none; }
+            main { margin-left: 0; padding: 20px; }
+            .feature-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+
+<nav class="sidebar">
+    <div class="logo">
+        <h1><span>⚛️</span> Quantum Circuit Optimization</h1>
+        <p>AI-Powered Quantum Circuit Toolkit</p>
+    </div>
+    <ul>
+        <li class="section-title">Overview</li>
+        <li><a href="#overview" class="active">Project Overview</a></li>
+        <li><a href="#features">Features</a></li>
+        <li><a href="#structure">Project Structure</a></li>
+
+        <li class="section-title">Getting Started</li>
+        <li><a href="#installation">Installation</a></li>
+        <li><a href="#quickstart">Quick Start</a></li>
+
+        <li class="section-title">Modules</li>
+        <li><a href="#data-generation">Data Generation</a></li>
+        <li><a href="#circuit-generation">Circuit Generation</a></li>
+        <li><a href="#simulation">Simulation</a></li>
+        <li><a href="#optimization">Cirq Optimization</a></li>
+        <li><a href="#model-training">Model Training <span class="badge">LLM</span></a></li>
+        <li><a href="#openrouter">OpenRouter Integration</a></li>
+        <li><a href="#cli">CLI Interface</a></li>
+
+        <li class="section-title">Reference</li>
+        <li><a href="#api">API Reference</a></li>
+        <li><a href="#config">Configuration</a></li>
+        <li><a href="#testing">Testing</a></li>
+        <li><a href="#license">License</a></li>
+    </ul>
+</nav>
+
+<main>
+
+<!-- ============================================================ -->
+<section id="overview">
+    <h2>Project Overview</h2>
+    <p>
+        <strong>Quantum Circuit Optimization</strong> is a comprehensive toolkit that bridges quantum computing
+        and large language models (LLMs). It provides tools for generating quantum circuit datasets using
+        <a href="https://quantumai.google/cirq">Cirq</a> and optimizing them via AI providers such as
+        <a href="https://openrouter.ai">OpenRouter</a> and <a href="https://ai.google.dev">Google Gemini</a>.
+    </p>
+    <p>
+        The project follows an <strong>in-context learning</strong> approach — providing the LLM with example
+        input/output circuit pairs so it learns the optimization pattern, then applying that learned pattern
+        to new circuits.
+    </p>
+    <div style="margin-top: 16px;">
+        <span class="tag tag-python">Python 3.10+</span>
+        <span class="tag tag-quantum">Cirq</span>
+        <span class="tag tag-ai">LLM-Powered</span>
+    </div>
+</section>
+
+<!-- ============================================================ -->
+<section id="features">
+    <h2>Features</h2>
+    <div class="feature-grid">
+        <div class="feature-card">
+            <h4>🔬 Dataset Generation</h4>
+            <p>Create random quantum circuits using Cirq with configurable parameters — qubit count, gate range, noise levels.</p>
+        </div>
+        <div class="feature-card">
+            <h4>🌊 Noise Simulation</h4>
+            <p>Simulate circuits with depolarizing, bit-flip, or phase-flip noise models. Also supports noiseless statevector simulation.</p>
+        </div>
+        <div class="feature-card">
+            <h4>🤖 AI Optimization</h4>
+            <p>Use LLMs via OpenRouter for circuit optimization through in-context learning with custom examples.</p>
+        </div>
+        <div class="feature-card">
+            <h4>⌨️ Unified CLI</h4>
+            <p>Single command-line interface for both dataset generation and circuit optimization with multiple provider support.</p>
+        </div>
+    </div>
+</section>
+
+<!-- ============================================================ -->
+<section id="structure">
+    <h2>Project Structure</h2>
+    <pre class="tree"><span class="dir">quantum-circuit-optimization/</span>
+├── <span class="dir">src/</span>
+│   ├── <span class="dir">data_generation/</span>           <span class="comment"># Quantum circuit dataset generation</span>
+│   │   ├── <span class="dir">qc/</span>                    <span class="comment"># Core quantum computing modules</span>
+│   │   │   ├── <span class="file">circuit_generation.py</span>  <span class="comment"># Circuit creation &amp; representation</span>
+│   │   │   ├── <span class="file">simulation.py</span>         <span class="comment"># Noise &amp; statevector simulation</span>
+│   │   │   └── <span class="file">optimization.py</span>       <span class="comment"># Cirq built-in optimization</span>
+│   │   └── <span class="dir">scripts/</span>
+│   │       └── <span class="file">generate_dataset.py</span>   <span class="comment"># CLI dataset generator</span>
+│   │   └── <span class="dir">tests/</span>
+│   │       └── <span class="file">test_qc.py</span>            <span class="comment"># pytest + hypothesis tests</span>
+│   └── <span class="dir">model_training/</span>             <span class="comment"># AI-powered circuit optimization</span>
+│       ├── <span class="file">config.py</span>               <span class="comment"># Provider configuration</span>
+│       ├── <span class="file">openrouter_optimizer.py</span>  <span class="comment"># OpenRouter API integration</span>
+│       ├── <span class="file">utils.py</span>                <span class="comment"># Validation &amp; parsing utilities</span>
+│       └── <span class="dir">cli/</span>
+│           └── <span class="file">predict.py</span>           <span class="comment"># Unified CLI for optimization</span>
+├── <span class="file">requirements.txt</span>               <span class="comment"># Pinned dependencies</span>
+├── <span class="file">pytest.ini</span>                     <span class="comment"># Test configuration</span>
+├── <span class="file">LICENSE</span>                        <span class="comment"># MIT-0 License</span>
+└── <span class="file">README.md</span></pre>
+</section>
+
+<!-- ============================================================ -->
+<section id="installation">
+    <h2>Installation</h2>
+    <h3>Prerequisites</h3>
+    <ul style="margin-left: 20px; color: var(--text-muted);">
+        <li>Python 3.10 or later</li>
+        <li>Virtual environment support (venv, uv, conda)</li>
+        <li>OpenRouter API key (for LLM optimization)</li>
+    </ul>
+
+    <h3>Clone &amp; Setup</h3>
+    <pre><code># Clone the repository
+git clone https://github.com/waifuai/quantum-circuit-optimization.git
+cd quantum-circuit-optimization
+
+# Using uv (recommended)
+python -m venv .venv
+source .venv/bin/activate        # Linux/macOS
+# .venv\Scripts\activate         # Windows
+pip install uv
+uv pip install -r requirements.txt
+
+# Or standard pip
+pip install -r requirements.txt</code></pre>
+
+    <h3>Verify Installation</h3>
+    <pre><code># Run the test suite
+pytest
+
+# Generate a test dataset
+python -m src.data_generation.scripts.generate_dataset --n_circuits 5</code></pre>
+</section>
+
+<!-- ============================================================ -->
+<section id="quickstart">
+    <h2>Quick Start</h2>
+
+    <h3>1. Generate a Dataset</h3>
+    <pre><code># Generate 100 circuits with default settings
+python -m src.data_generation.scripts.generate_dataset
+
+# Custom: 500 circuits, 2-10 gates, 3 qubits
+python -m src.data_generation.scripts.generate_dataset \
+    --n_circuits 500 \
+    --min_gates 2 \
+    --max_gates 10 \
+    --n_qubits 3 \
+    --output_file my_dataset.jsonl</code></pre>
+
+    <h3>2. Optimize a Circuit</h3>
+    <pre><code># Set your API key
+export OPENROUTER_API_KEY="sk-or-..."
+
+# Optimize a simple circuit
+python -m src.model_training.cli.predict \
+    --input_circuit "H 0 ; CNOT 0 1 ; H 0"
+
+# With custom examples
+python -m src.model_training.cli.predict \
+    --input_circuit "X 0 ; X 0 ; Y 1" \
+    --example "H 0 ; CNOT 0 1 ; H 0||CNOT 0 1" \
+    --example "X 0 ; X 0 ; Y 1||Y 1"</code></pre>
+</section>
+
+<!-- ============================================================ -->
+<section id="data-generation">
+    <h2>Data Generation Module</h2>
+    <p>
+        The <code>src/data_generation/</code> package handles creating random quantum circuits,
+        simulating them, and saving structured datasets in JSON Lines format.
+    </p>
+    <p>Each generated circuit record contains:</p>
+    <table>
+        <tr><th>Field</th><th>Type</th><th>Description</th></tr>
+        <tr><td><code>raw_circuit</code></td><td>string</td><td>Cirq circuit string representation</td></tr>
+        <tr><td><code>operations</code></td><td>list[dict]</td><td>Gate operations with type, qubits, exponent</td></tr>
+        <tr><td><code>num_gates</code></td><td>int</td><td>Non-measurement gate count</td></tr>
+        <tr><td><code>simulation_counts</code></td><td>dict</td><td>Measurement histogram from noisy simulation</td></tr>
+        <tr><td><code>optimized_circuit</code></td><td>string</td><td>Cirq-optimized circuit string</td></tr>
+    </table>
+</section>
+
+<!-- ============================================================ -->
+<section id="circuit-generation">
+    <h2>Circuit Generation</h2>
+    <p>
+        <code>circuit_generation.py</code> provides the core circuit creation logic using Cirq.
+    </p>
+
+    <h3>Key Classes &amp; Functions</h3>
+
+    <h4><code>QuantumConfig</code></h4>
+    <p>Constants for default circuit parameters:</p>
+    <table>
+        <tr><th>Constant</th><th>Value</th><th>Description</th></tr>
+        <tr><td><code>N_QUBITS</code></td><td>5</td><td>Default number of qubits</td></tr>
+        <tr><td><code>MIN_GATES</code></td><td>1</td><td>Minimum gates per circuit</td></tr>
+        <tr><td><code>MAX_GATES</code></td><td>5</td><td>Maximum gates per circuit</td></tr>
+        <tr><td><code>DEFAULT_NOISE</code></td><td>0.01</td><td>Default noise level</td></tr>
+    </table>
+
+    <h4><code>generate_random_circuit(qubits, n_gates, gate_set=None)</code></h4>
+    <p>Creates a random quantum circuit. Default gate set: <code>X, Y, Z, H</code> (single-qubit) and <code>CNOT, CZ</code> (two-qubit). Appends a measurement on all qubits.</p>
+    <pre><code>import cirq
+from src.data_generation.qc.circuit_generation import generate_random_circuit
+
+qubits = [cirq.GridQubit(0, i) for i in range(3)]
+circuit = generate_random_circuit(qubits, n_gates=5)
+print(circuit)</code></pre>
+
+    <h4><code>GateOperationData</code></h4>
+    <p>Frozen dataclass for serializing gate operations: <code>gate_type</code>, <code>qubits_repr</code>, <code>exponent</code>.</p>
+
+    <h4><code>circuit_to_operations_data(circuit)</code></h4>
+    <p>Converts a Cirq circuit to a list of <code>GateOperationData</code> objects and returns the non-measurement gate count.</p>
+</section>
+
+<!-- ============================================================ -->
+<section id="simulation">
+    <h2>Simulation</h2>
+    <p>
+        <code>simulation.py</code> provides two simulation modes for quantum circuits.
+    </p>
+
+    <h3><code>simulate_with_noise(circuit, noise, noise_model, repetitions)</code></h3>
+    <p>Simulates a circuit under noise and returns measurement histograms.</p>
+    <table>
+        <tr><th>Parameter</th><th>Default</th><th>Description</th></tr>
+        <tr><td><code>noise</code></td><td>0.01</td><td>Noise probability (0–1)</td></tr>
+        <tr><td><code>noise_model</code></td><td>"depolarize"</td><td>Options: <code>depolarize</code>, <code>bit_flip</code>, <code>phase_flip</code></td></tr>
+        <tr><td><code>repetitions</code></td><td>1000</td><td>Number of measurement shots</td></tr>
+    </table>
+
+    <h3><code>simulate_statevector(circuit)</code></h3>
+    <p>Simulates without noise, returning a dictionary of computational basis states to probabilities. Filters out probabilities below 1e-10.</p>
+    <pre><code>from src.data_generation.qc.simulation import simulate_with_noise, simulate_statevector
+
+# Noisy simulation
+counts = simulate_with_noise(circuit, noise=0.05, noise_model="bit_flip")
+
+# Noiseless statevector
+probs = simulate_statevector(circuit)
+print(probs)  # {'state_000': 0.125, 'state_001': 0.125, ...}</code></pre>
+</section>
+
+<!-- ============================================================ -->
+<section id="optimization">
+    <h2>Cirq Optimization</h2>
+    <p>
+        <code>optimization.py</code> wraps Cirq's built-in <code>optimize_for_target_gateset</code> routine.
+    </p>
+
+    <h3><code>optimize_circuit(circuit, qubits, gateset=None)</code></h3>
+    <p>Optimizes a circuit for a target gateset. Defaults to <code>cirq.CZTargetGateset()</code> if none specified.</p>
+    <pre><code>from src.data_generation.qc.optimization import optimize_circuit
+import cirq
+
+qubits = [cirq.GridQubit(0, i) for i in range(3)]
+circuit = cirq.Circuit([cirq.H(q) for q in qubits])
+optimized = optimize_circuit(circuit, qubits)
+
+# Custom gateset
+optimized_sqrt = optimize_circuit(circuit, qubits, gateset=cirq.SqrtIswapTargetGateset())</code></pre>
+</section>
+
+<!-- ============================================================ -->
+<section id="model-training">
+    <h2>Model Training Module</h2>
+    <p>
+        The <code>src/model_training/</code> package handles LLM-powered quantum circuit optimization
+        using in-context learning. Currently supports OpenRouter as the primary provider.
+    </p>
+
+    <h3>How It Works</h3>
+    <ol style="margin-left: 20px; color: var(--text-muted); line-height: 2;">
+        <li>Provide input/output circuit examples (e.g., <code>"H 0 ; CNOT 0 1 ; H 0" → "CNOT 0 1"</code>)</li>
+        <li>The examples are formatted into a prompt with clear "Unoptimized/Optimized" pairs</li>
+        <li>The target circuit is appended as the final "Unoptimized" entry</li>
+        <li>The LLM generates the "Optimized" output using the learned pattern</li>
+        <li>The optimized circuit string is returned</li>
+    </ol>
+</section>
+
+<!-- ============================================================ -->
+<section id="openrouter">
+    <h2>OpenRouter Integration</h2>
+    <p>
+        <code>openrouter_optimizer.py</code> handles API communication with OpenRouter's chat completions endpoint.
+    </p>
+
+    <h3>Authentication</h3>
+    <p>The API key is resolved in this order:</p>
+    <ol style="margin-left: 20px; color: var(--text-muted); line-height: 2;">
+        <li><code>OPENROUTER_API_KEY</code> environment variable</li>
+        <li><code>~/.api-openrouter</code> file (containing the key on one line)</li>
+    </ol>
+
+    <h3><code>optimize_circuit_with_openrouter(...)</code></h3>
+    <table>
+        <tr><th>Parameter</th><th>Type</th><th>Description</th></tr>
+        <tr><td><code>unoptimized_circuit_string</code></td><td>str</td><td>Circuit to optimize (e.g., "H 0 ; CNOT 0 1")</td></tr>
+        <tr><td><code>examples</code></td><td>list[tuple]</td><td>List of (input, output) example pairs</td></tr>
+        <tr><td><code>model</code></td><td>str | None</td><td>Model override (defaults to ~/.model-openrouter or "openrouter/free")</td></tr>
+        <tr><td><code>timeout</code></td><td>int</td><td>HTTP timeout in seconds (default: 60)</td></tr>
+    </table>
+    <p>Returns the optimized circuit string. Raises <code>ValueError</code> for invalid inputs or missing API key, <code>RuntimeError</code> for API failures.</p>
+</section>
+
+<!-- ============================================================ -->
+<section id="cli">
+    <h2>CLI Interface</h2>
+    <p>
+        The unified CLI (<code>src.model_training.cli.predict</code>) provides a single entry point
+        for circuit optimization.
+    </p>
+
+    <h3>Usage</h3>
+    <pre><code>python -m src.model_training.cli.predict [OPTIONS]
+
+Required:
+  --input_circuit STR    Circuit string (e.g., "H 0 ; CNOT 0 1 ; H 0")
+
+Options:
+  --provider STR         Provider name (default: openrouter)
+  --model STR            Override model name
+  --timeout INT          HTTP timeout in seconds (default: 60)
+  --example STR          Add example as "input||output" (repeatable)
+  --verbose, -v          Enable DEBUG logging</code></pre>
+
+    <h3>Examples</h3>
+    <pre><code># Basic optimization with defaults
+python -m src.model_training.cli.predict \
+    --input_circuit "H 0 ; CNOT 0 1 ; H 0"
+
+# With custom examples and verbose output
+python -m src.model_training.cli.predict \
+    --input_circuit "X 0 ; X 0 ; Y 1" \
+    --example "H 0 ; CNOT 0 1 ; H 0||CNOT 0 1" \
+    --example "X 0 ; X 0 ; Y 1||Y 1" \
+    --timeout 120 \
+    --verbose
+
+# Override model
+python -m src.model_training.cli.predict \
+    --provider openrouter \
+    --model "deepseek/deepseek-chat-v3-0324" \
+    --input_circuit "H 0 ; CNOT 0 1 ; H 0"</code></pre>
+
+    <div class="tip">
+        <strong>Default examples:</strong> If no <code>--example</code> flags are provided, the CLI uses
+        two built-in examples: <code>"H 0 ; CNOT 0 1 ; H 0" → "CNOT 0 1"</code> and
+        <code>"X 0 ; X 0 ; Y 1" → "Y 1"</code>.
+    </div>
+</section>
+
+<!-- ============================================================ -->
+<section id="api">
+    <h2>API Reference</h2>
+
+    <h3>Data Generation — <code>qc.circuit_generation</code></h3>
+    <table>
+        <tr><th>Symbol</th><th>Type</th><th>Description</th></tr>
+        <tr><td><code>QuantumConfig</code></td><td>class</td><td>Constants: N_QUBITS, MIN_GATES, MAX_GATES, DEFAULT_NOISE</td></tr>
+        <tr><td><code>GateOperationData</code></td><td>dataclass</td><td>Frozen dataclass: gate_type, qubits_repr, exponent</td></tr>
+        <tr><td><code>generate_random_circuit(qubits, n_gates, gate_set=None)</code></td><td>function</td><td>Returns cirq.Circuit with random gates + measurement</td></tr>
+        <tr><td><code>gate_operation_to_data(op)</code></td><td>function</td><td>Converts cirq.Operation → GateOperationData</td></tr>
+        <tr><td><code>circuit_to_operations_data(circuit)</code></td><td>function</td><td>Returns (list[GateOperationData], gate_count)</td></tr>
+    </table>
+
+    <h3>Data Generation — <code>qc.simulation</code></h3>
+    <table>
+        <tr><th>Symbol</th><th>Type</th><th>Description</th></tr>
+        <tr><td><code>simulate_with_noise(circuit, noise, noise_model, repetitions)</code></td><td>function</td><td>Returns dict[int, int] measurement histogram</td></tr>
+        <tr><td><code>simulate_statevector(circuit)</code></td><td>function</td><td>Returns dict[str, float] state probabilities</td></tr>
+    </table>
+
+    <h3>Data Generation — <code>qc.optimization</code></h3>
+    <table>
+        <tr><th>Symbol</th><th>Type</th><th>Description</th></tr>
+        <tr><td><code>optimize_circuit(circuit, qubits, gateset=None)</code></td><td>function</td><td>Optimizes via Cirq CZTargetGateset (default)</td></tr>
+    </table>
+
+    <h3>Data Generation — <code>scripts.generate_dataset</code></h3>
+    <table>
+        <tr><th>Symbol</th><th>Type</th><th>Description</th></tr>
+        <tr><td><code>generate_qc_dict(qubits, n_gates, noise_level)</code></td><td>function</td><td>Returns dict with raw_circuit, operations, num_gates, simulation_counts, optimized_circuit</td></tr>
+        <tr><td><code>generate_dataset(n_circuits, qubits, min_gates, max_gates, noise_level)</code></td><td>function</td><td>Returns list of circuit dicts</td></tr>
+    </table>
+
+    <h3>Model Training — <code>openrouter_optimizer</code></h3>
+    <table>
+        <tr><th>Symbol</th><th>Type</th><th>Description</th></tr>
+        <tr><td><code>optimize_circuit_with_openrouter(circuit_str, examples, model, timeout)</code></td><td>function</td><td>Returns optimized circuit string via OpenRouter API</td></tr>
+        <tr><td><code>resolve_openrouter_api_key()</code></td><td>function</td><td>Returns API key from env or ~/.api-openrouter</td></tr>
+    </table>
+
+    <h3>Model Training — <code>config</code></h3>
+    <table>
+        <tr><th>Symbol</th><th>Type</th><th>Description</th></tr>
+        <tr><td><code>DEFAULT_OPENROUTER_MODEL</code></td><td>str</td><td>"openrouter/free"</td></tr>
+        <tr><td><code>OPENROUTER_API_URL</code></td><td>str</td><td>OpenRouter chat completions endpoint</td></tr>
+        <tr><td><code>DEFAULT_TIMEOUT</code></td><td>int</td><td>60 seconds</td></tr>
+        <tr><td><code>resolve_openrouter_model(explicit=None)</code></td><td>function</td><td>Resolves model from arg, ~/.model-openrouter, or fallback</td></tr>
+    </table>
+
+    <h3>Model Training — <code>utils</code></h3>
+    <table>
+        <tr><th>Symbol</th><th>Type</th><th>Description</th></tr>
+        <tr><td><code>validate_circuit_string(circuit_str)</code></td><td>function</td><td>Validates circuit format against known gates</td></tr>
+        <tr><td><code>parse_examples(examples_str)</code></td><td>function</td><td>Parses "input||output" strings into tuples</td></tr>
+        <tr><td><code>format_circuit_for_display(circuit_str, max_length=50)</code></td><td>function</td><td>Truncates long circuit strings for display</td></tr>
+        <tr><td><code>setup_logging(verbose, level)</code></td><td>function</td><td>Configures logging level</td></tr>
+    </table>
+</section>
+
+<!-- ============================================================ -->
+<section id="config">
+    <h2>Configuration</h2>
+
+    <h3>API Keys</h3>
+    <table>
+        <tr><th>Provider</th><th>Environment Variable</th><th>Fallback File</th></tr>
+        <tr><td>OpenRouter</td><td><code>OPENROUTER_API_KEY</code></td><td><code>~/.api-openrouter</code></td></tr>
+    </table>
+
+    <h3>Model Selection</h3>
+    <p>Override default models by creating dotfiles in your home directory:</p>
+    <pre><code># Set default OpenRouter model
+echo "deepseek/deepseek-chat-v3-0324" > ~/.model-openrouter</code></pre>
+
+    <div class="tip">
+        <strong>Supported gates for validation:</strong>
+        <code>H</code>, <code>X</code>, <code>Y</code>, <code>Z</code>, <code>CNOT</code>,
+        <code>CX</code>, <code>CZ</code>, <code>S</code>, <code>T</code>, <code>RX</code>,
+        <code>RY</code>, <code>RZ</code>
+    </div>
+</section>
+
+<!-- ============================================================ -->
+<section id="testing">
+    <h2>Testing</h2>
+    <p>The project uses <strong>pytest</strong> with <strong>Hypothesis</strong> for property-based testing.</p>
+
+    <h3>Running Tests</h3>
+    <pre><code># Run all tests
+pytest
+
+# Run data generation tests
+pytest src/data_generation/tests/
+
+# Run with verbose output
+pytest -v</code></pre>
+
+    <h3>Test Coverage</h3>
+    <table>
+        <tr><th>Module</th><th>Tests</th><th>Approach</th></tr>
+        <tr><td>Circuit generation</td><td>Property-based (Hypothesis)</td><td>Validates gate counts, measurement presence across random inputs</td></tr>
+        <tr><td>Gate serialization</td><td>Unit tests</td><td>Verifies GateOperationData conversion accuracy</td></tr>
+        <tr><td>Noise simulation</td><td>Unit tests</td><td>Tests depolarize, bit_flip, phase_flip models</td></tr>
+        <tr><td>Statevector simulation</td><td>Unit tests</td><td>Verifies probability sum ≈ 1.0</td></tr>
+        <tr><td>Dataset generation</td><td>Unit + CLI tests</td><td>Tests JSONL output, subprocess CLI invocation</td></tr>
+    </table>
+
+    <div class="warn">
+        <strong>Note:</strong> Tests require all dependencies installed. The test suite validates
+        JSONL serialization, subprocess CLI execution, and circuit optimization with custom gatesets.
+    </div>
+</section>
+
+<!-- ============================================================ -->
+<section id="license">
+    <h2>License</h2>
+    <p>
+        This project is licensed under the <strong>MIT No Attribution (MIT-0)</strong> license.
+    </p>
+    <pre><code>MIT No Attribution
+
+Copyright 2025 WaifuAI
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.</code></pre>
+    <p style="margin-top: 12px;">
+        <a href="https://github.com/waifuai/quantum-circuit-optimization">GitHub Repository</a>
+        &nbsp;·&nbsp;
+        <a href="https://github.com/waifuai/quantum-circuit-optimization/issues">Report Issues</a>
+    </p>
+</section>
+
+</main>
+
+<script>
+// Highlight active nav link on scroll
+const sections = document.querySelectorAll('section[id]');
+const navLinks = document.querySelectorAll('nav.sidebar ul li a');
+
+function setActive() {
+    let current = '';
+    sections.forEach(section => {
+        const top = section.offsetTop - 80;
+        if (window.scrollY >= top) current = section.getAttribute('id');
+    });
+    navLinks.forEach(link => {
+        link.classList.remove('active');
+        if (link.getAttribute('href') === '#' + current) link.classList.add('active');
+    });
+}
+
+window.addEventListener('scroll', setActive);
+setActive();
+</script>
+
+</body>
+</html>
