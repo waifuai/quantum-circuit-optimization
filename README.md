@@ -1,16 +1,16 @@
 # Quantum Circuit Optimization
 
-A comprehensive toolkit for quantum circuit optimization using large language models (LLMs). This project provides tools for generating quantum circuit datasets and optimizing them using AI providers like OpenRouter and Google Gemini.
+A comprehensive toolkit for quantum circuit optimization using large language models (LLMs). This project provides tools for generating quantum circuit datasets and optimizing them using the OpenRouter AI provider.
 
-## 🚀 Features
+## Features
 
 - **Dataset Generation**: Create random quantum circuits using Cirq with configurable parameters
 - **Circuit Simulation**: Simulate circuits with optional noise models
-- **AI-Powered Optimization**: Use LLMs (OpenRouter, Google Gemini) for circuit optimization via in-context learning
-- **Unified CLI**: Simple command-line interface supporting multiple providers
+- **AI-Powered Optimization**: Use LLMs (OpenRouter) for circuit optimization via in-context learning
+- **Unified CLI**: Simple command-line interface
 - **Extensible Architecture**: Easy to add new optimization providers and circuit types
 
-## 📁 Project Structure
+## Project Structure
 
 ```
 quantum-circuit-optimization/
@@ -21,13 +21,13 @@ quantum-circuit-optimization/
 │   └── model_training/           # AI-powered circuit optimization
 │       ├── cli/                  # Unified command-line interface
 │       ├── config.py             # Configuration management
-│       └── gemini_optimizer.py   # Gemini API integration
+│       └── optimizer.py          # OpenRouter API integration
 ├── tests/                        # Test suites
 ├── requirements.txt              # Python dependencies
 └── README.md                     # This file
 ```
 
-## 🛠️ Installation
+## Installation
 
 ### Prerequisites
 - Python 3.10+
@@ -57,7 +57,7 @@ quantum-circuit-optimization/
    pip install -r requirements.txt
    ```
 
-## 📊 Data Generation
+## Data Generation
 
 Generate quantum circuit datasets for training and testing:
 
@@ -80,32 +80,22 @@ python src/data_generation/scripts/generate_dataset.py \
 - `--n_qubits`: Number of qubits (default: 5)
 - `--noise_level`: Simulation noise level (default: 0.01)
 
-## 🤖 Circuit Optimization
+## Circuit Optimization
 
-Optimize quantum circuits using AI providers:
+Optimize quantum circuits using OpenRouter AI:
 
 ### Quick Start
 
 1. **Set up API credentials:**
    ```bash
    # For OpenRouter (default)
-   export OPENROUTER_API_KEY="your-api-key"
+   export OPENROUTER_API_KEY="***"
    # Or create ~/.api-openrouter file with your key
-
-   # For Google Gemini
-   export GEMINI_API_KEY="your-api-key"
-   # Or create ~/.api-gemini file with your key
    ```
 
 2. **Optimize a circuit:**
    ```bash
-   # Using OpenRouter (default)
    python -m src.model_training.cli.predict \
-       --input_circuit "H 0 ; CNOT 0 1 ; H 0"
-
-   # Using Google Gemini
-   python -m src.model_training.cli.predict \
-       --provider gemini \
        --input_circuit "H 0 ; CNOT 0 1 ; H 0"
    ```
 
@@ -117,13 +107,11 @@ python -m src.model_training.cli.predict \
     --input_circuit "X 0 ; X 0 ; Y 1" \
     --example "H 0 ; CNOT 0 1 ; H 0||CNOT 0 1" \
     --example "X 0 ; X 0 ; Y 1||Y 1" \
-    --provider gemini \
     --timeout 120 \
     --verbose
 
 # Override model
 python -m src.model_training.cli.predict \
-    --provider openrouter \
     --model "deepseek/deepseek-chat-v3-0324" \
     --input_circuit "H 0 ; CNOT 0 1 ; H 0"
 ```
@@ -133,11 +121,9 @@ python -m src.model_training.cli.predict \
 Create configuration files for model selection:
 
 - `~/.model-openrouter`: Specify OpenRouter model (one line)
-- `~/.model-gemini`: Specify Gemini model (one line)
 - `~/.api-openrouter`: OpenRouter API key
-- `~/.api-gemini`: Gemini API key
 
-## 🧪 Testing
+## Testing
 
 Run the test suite to ensure everything works correctly:
 
@@ -153,12 +139,12 @@ pytest src/data_generation/tests/
 pytest src/model_training/tests/
 ```
 
-## 🔧 Development
+## Development
 
 ### Adding New Providers
 
 1. Add provider configuration to `src/model_training/config.py`
-2. Implement optimization function following the pattern in `gemini_optimizer.py`
+2. Implement optimization function following the pattern in the existing optimizer
 3. Add provider to the CLI in `src/model_training/cli/predict.py`
 
 ### Code Quality
@@ -176,7 +162,7 @@ pytest src/model_training/tests/
 4. Ensure all tests pass
 5. Submit a pull request
 
-## 📈 Future Work
+## Future Work
 
 ### Data Generation
 - Support for custom gate sets
@@ -196,15 +182,15 @@ pytest src/model_training/tests/
 - Async API calls
 - Resource optimization
 
-## 📄 License
+## License
 
 This project is licensed under the MIT-0 License - see the [LICENSE](./LICENSE) file for details.
 
-## 🤝 Contributing
+## Contributing
 
 Contributions are welcome! Please feel free to submit a Pull Request. For major changes, please open an issue first to discuss what you would like to change.
 
-## 📞 Support
+## Support
 
 If you encounter any issues or have questions:
 1. Check the [Issues](http://github.com/waifuai/quantum-circuit-optimization/issues) page
