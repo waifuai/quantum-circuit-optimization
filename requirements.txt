@@ -1,22 +1,22 @@
 # Core scientific stack
-numpy==2.3.2
-scipy==1.16.1
+numpy==2.4.6
+scipy==1.18.0
 pandas==2.3.1
 
 # Quantum library
-cirq-core==1.6.0
+cirq-core==1.7.0
 
 # HTTP
-requests==2.33.1
+requests==2.34.2
 
 # Visualization
-matplotlib==3.10.8
+matplotlib==3.11.1
 networkx==3.6.1
 sympy==1.14.0
 
 # Utilities
-tqdm==4.67.3
+tqdm==4.70.0
 
 # Testing
-pytest==9.0.3
-hypothesis==6.137.1
+pytest==9.1.1
+hypothesis==6.165.9
